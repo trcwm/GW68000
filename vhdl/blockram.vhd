@@ -46,14 +46,11 @@ architecture rtl of BlockRAM is
                 next;
             end if;
 
-            read(text_line, ram_content(index));
+            hread(text_line, ram_content(index));
             index := index + 1;
 
         end loop;
-        --for i in 0 to (num_entries-1) loop
-        --    readline(text_file, text_line);
-        --    read(text_line, ram_content(i));
-        --end loop;
+
         return ram_content;
     end function;
 

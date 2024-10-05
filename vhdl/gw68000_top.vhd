@@ -1,7 +1,7 @@
 -- Top level for the gw68000 system
 -- Version          Description
 --   0.1:           initial version
---   0.2:           changed TG68_fast to TG68
+--   0.2:           changed TG68_fast to TG68, add spy program counter.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -19,6 +19,7 @@ end;
 architecture rtl of gw68000_top is
     signal lds_n, uds_n  : std_logic;
     signal we_n     : std_logic;
+    signal as       : std_logic;
     signal address  : std_logic_vector(31 downto 0);
     signal data_out : std_logic_vector(15 downto 0);
     signal data_in  : std_logic_vector(15 downto 0);
@@ -27,6 +28,8 @@ architecture rtl of gw68000_top is
     signal cpu_clk  : std_logic;
 
     signal upper_we_n, lower_we_n : std_logic;
+
+    signal spy_PC : std_logic_vector(31 downto 0);
 begin 
 
     -- clock generator
@@ -57,7 +60,7 @@ begin
         )
         port map
         (
-            clk         => ram_clk,
+            clk         => clk,
             address     => address(8 downto 1),
             we_n        => upper_we_n,
             data_in     => data_out(15 downto 8),
@@ -73,7 +76,7 @@ begin
         )
         port map
         (
-            clk         => ram_clk,
+            clk         => clk,
             address     => address(8 downto 1),
             we_n        => lower_we_n,
             data_in     => data_out(7 downto 0),
@@ -88,12 +91,13 @@ begin
             reset       => reset_n,
             dtack       => '0',
             data_in     => data_in,
-            data_write  => data_out,
-            address     => address,
+            data_out    => data_out,
+            addr        => address,
             as          => as,
             rw          => we_n,
             lds         => lds_n,
-            uds         => uds_n
+            uds         => uds_n,
+            spy_PC      => spy_PC
         );
 
 end rtl;

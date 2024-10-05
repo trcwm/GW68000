@@ -80,7 +80,8 @@ entity TG68_fast is
         state_out         : out std_logic_vector(1 downto 0);
 		LDS, UDS		  : out std_logic;		
         decodeOPC         : buffer std_logic;
-		wr				  : out std_logic
+		wr				  : out std_logic;
+		spy_PC            : out std_logic_vector(31 downto 0)
 		);
 end TG68_fast;
 
@@ -394,7 +395,8 @@ BEGIN
 		END IF;
 	END PROCESS;
 
-
+	-- Added TRCWM: spy on the program counter for debugging
+	spy_PC <= TG68_PC;
 
 	address <= TG68_PC when state="00" else X"ffffffff" when state="01" else memaddr;
 	LDS <= '0' WHEN (datatype/="00" OR state="00" OR memaddr(0)='1') AND state/="01" ELSE '1';
