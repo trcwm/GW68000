@@ -1,10 +1,91 @@
 
 IO_LOC "clk12M" 35;
-IO_PORT "clk12M" PULL_MODE=UP;
-IO_LOC "userbutton" 77;
-IO_PORT "userbutton" PULL_MODE=UP;
+IO_PORT "clk12M" IO_TYPE=LVTTL33 PULL_MODE=UP;
 
-//IO_LOC "clkx" 63;
-//IO_PORT "clkx" PULL_MODE=UP;
+IO_LOC "userbutton" 77;
+IO_PORT "userbutton" IO_TYPE=LVTTL33 PULL_MODE=UP;
+
 IO_LOC "led" 86;
 IO_PORT "led" PULL_MODE=UP DRIVE=8;
+
+/*
+   FT2232H-56Q BDBUS pins:
+   BDBUS0 pin 16 TXD (out from FT2232)
+   BDBUS1 pin 15 RXD (in)
+   BDBUS2 pin 14 RST_n (out)
+   BDBUS3 pin 13 CTS_n (in)
+   BDBUS4 pin 11 DTR_n (out)
+
+IO_LOC "serial_out" 15;
+IO_PORT serial_out" IO_TYPE=LVTTL33;
+IO_LOC "serial_in" 16;
+IO_PORT "serial_in" IO_TYPE=LVTTL33;
+
+*/
+
+/*
+
+IO_LOC "LEDS[0]" 86;
+IO_PORT "LEDS[0]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[1]" 85;
+IO_PORT "LEDS[1]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[2]" 84;
+IO_PORT "LEDS[2]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[3]" 83;
+IO_PORT "LEDS[3]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[4]" 82;
+IO_PORT "LEDS[4]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[5]" 81;
+IO_PORT "LEDS[5]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[6]" 80;
+IO_PORT "LEDS[6]" IO_TYPE=LVTTL33;
+IO_LOC "LEDS[7]" 79;
+IO_PORT "LEDS[7]" IO_TYPE=LVTTL33;
+
+*/
+
+/*
+    GW1NR embedded SDRAM
+
+IO_PORT "O_sdram_clk"    IO_TYPE=LVTTL33
+IO_PORT "O_sdram_cke"    IO_TYPE=LVTTL33
+IO_PORT "O_sdram_cas_n"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_ras_n"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_wen_n"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_dqm[0]" IO_TYPE=LVTTL33
+IO_PORT "O_sdram_dqm[1]" IO_TYPE=LVTTL33
+
+IO_PORT "O_sdram_ba[0]" IO_TYPE=LVTTL33
+IO_PORT "O_sdram_ba[1]" IO_TYPE=LVTTL33
+
+IO_PORT "IO_sdram_dq[0]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[1]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[2]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[3]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[4]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[5]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[6]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[7]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[8]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[9]"  IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[10]" IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[11]" IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[12]" IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[13]" IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[14]" IO_TYPE=LVTTL33
+IO_PORT "IO_sdram_dq[15]" IO_TYPE=LVTTL33
+
+IO_PORT "O_sdram_addr[0]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[1]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[2]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[3]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[4]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[5]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[6]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[7]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[8]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[9]"  IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[10]" IO_TYPE=LVTTL33
+IO_PORT "O_sdram_addr[11]" IO_TYPE=LVTTL33
+
+*/
