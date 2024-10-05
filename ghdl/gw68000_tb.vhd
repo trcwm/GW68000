@@ -8,17 +8,18 @@ entity gw68000_tb is
 end entity;
 
 architecture tb of gw68000_tb is
-    signal do_sim : std_logic := '1';
-    signal clk    : std_logic := '0';
-    signal reset  : std_logic := '0';
+    signal do_sim  : std_logic := '1';
+    signal clk     : std_logic := '0';
+    signal reset_n : std_logic := '1';
 begin
 
+    -- simulation control process
     proc_sim: process
     begin
         wait for 2 us;
-        reset <= '1';
-        wait for 2 us;
-        reset <= '0';
+        reset_n <= '0';
+        wait for 200 us;
+        reset_n <= '1';
 
         wait for 100 us;
         do_sim <= '0';  -- end simulation
@@ -36,5 +37,11 @@ begin
         end if;
     end process proc_clk;
 
-
+    u_dut: entity work.gw68000_top(rtl)
+        port map
+        (
+            clk     => clk,
+            reset_n => reset_n
+        );
+    
 end tb;
