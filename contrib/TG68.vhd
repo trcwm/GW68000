@@ -133,11 +133,14 @@ TG68_fast_inst: TG68_fast
 	
 	PROCESS (clk)
 	BEGIN
-		IF clkena_in='1' AND (clkena_e='1' OR state="01") THEN
-			clkena <= '1';
-		ELSE 
-			clkena <= '0';
-		END IF;	
+        -- trcwm: added rising edge
+        IF rising_edge(clk) THEN
+            IF clkena_in='1' AND (clkena_e='1' OR state="01") THEN
+                clkena <= '1';
+            ELSE 
+                clkena <= '0';
+            END IF;	
+        END IF;
 	END PROCESS;
 				
 PROCESS (clk, reset, state, as_s, as_e, rw_s, rw_e, uds_s, uds_e, lds_s, lds_e)

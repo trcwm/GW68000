@@ -1,0 +1,10 @@
+
+IO_LOC "clk12M" 35;
+IO_PORT "clk12M" PULL_MODE=UP;
+IO_LOC "userbutton" 77;
+IO_PORT "userbutton" PULL_MODE=UP;
+
+//IO_LOC "clkx" 63;
+//IO_PORT "clkx" PULL_MODE=UP;
+IO_LOC "led" 86;
+IO_PORT "led" PULL_MODE=UP DRIVE=8;

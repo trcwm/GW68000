@@ -73,3 +73,26 @@ begin
     end process proc_clk;
 
 end rtl;
+
+
+architecture rtl of BlockRAM is
+    constant num_entries : integer := 2**addr_width;
+    type ram_t is array(0 to num_entries-1) of std_logic_vector(data_in'range);
+    signal RAM : ram_t;
+begin
+
+    proc_clk: process(clk)
+        variable ram_index : integer;
+    begin
+        if rising_edge(clk) then
+            ram_index := to_integer(unsigned(address));
+            if we_n = '0' then
+                RAM(ram_index) <= data_in;
+                data_out_r <= data_in;
+            else
+                data_out_r <= RAM(ram_index);
+            end if;
+        end if; -- rising edge
+    end process proc_clk;
+
+end rtl;
