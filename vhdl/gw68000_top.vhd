@@ -38,9 +38,10 @@ architecture rtl of gw68000_top is
     signal ram_data_out : std_logic_vector(15 downto 0);
     signal uart_status  : std_logic_vector(7 downto 0);
     signal uart_ready   : std_logic;
+    signal uart_rxdata  : std_logic_vector(7 downto 0);
 
     signal upper_we_n, lower_we_n, uart_we_n : std_logic;
-    signal baud_stb : std_logic;
+    signal rx_baud_stb, tx_baud_stb : std_logic;
 
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
@@ -126,7 +127,7 @@ begin
     --   IO peripherals
     -- ================================================================
 
-    u_baudgen: entity work.baudgen(rtl)
+    u_txbaudgen: entity work.baudgen(rtl)
         generic map
         (
             g_clkrate   => 12000000,
@@ -136,7 +137,7 @@ begin
         (
             clk          => clk,
             reset_n      => reset_n,
-            baud_stb_out => baud_stb
+            baud_stb_out => tx_baud_stb
         );
 
     u_tx_uart: entity work.tx_uart(rtl)
@@ -145,10 +146,36 @@ begin
             clk         => clk,
             reset_n     => reset_n,
             we_n        => uart_we_n,
-            data_in     => data_out(7 downto 0),
-            baud_stb    => baud_stb,
+            --data_in     => data_out(7 downto 0),
+            data_in     => uart_rxdata, -- loopback from rx uart
+            baud_stb    => tx_baud_stb,
             serial_out  => serial_out,
             ready       => uart_ready
+        );
+
+    u_rxbaudgen: entity work.baudgen(rtl)
+        generic map
+        (
+            g_clkrate   => 12000000,
+            g_baudrate  => 115200*4     -- rx requires 4x the rate
+        )
+        port map
+        (
+            clk          => clk,
+            reset_n      => reset_n,
+            baud_stb_out => rx_baud_stb
+        );
+
+    u_rx_uart: entity work.rx_uart(rtl)
+        port map
+        (
+            clk         => clk,
+            reset_n     => reset_n,
+            baud_stb    => rx_baud_stb,
+            serial_in   => serial_in,
+            read_stb    => '1',
+            data_out    => uart_rxdata,
+            data_ready  => open
         );
 
     -- generate uart status register
