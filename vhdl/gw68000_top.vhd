@@ -30,18 +30,20 @@ end;
 architecture rtl of gw68000_top is
     signal lds_n, uds_n  : std_logic;
     signal we_n     : std_logic;
-    signal as       : std_logic;
+    signal as_n     : std_logic;
     signal address  : std_logic_vector(31 downto 0);
     signal data_out : std_logic_vector(15 downto 0);
     signal data_in  : std_logic_vector(15 downto 0);
 
     signal ram_data_out : std_logic_vector(15 downto 0);
     signal uart_status  : std_logic_vector(7 downto 0);
-    signal uart_ready   : std_logic;
+    
     signal uart_rxdata  : std_logic_vector(7 downto 0);
 
-    signal upper_we_n, lower_we_n, uart_we_n : std_logic;
+    signal upper_we_n, lower_we_n, tx_uart_we_n : std_logic;
     signal rx_baud_stb, tx_baud_stb : std_logic;
+    signal rx_uart_full, tx_uart_empty : std_logic;
+    signal rx_uart_read_stb : std_logic;
 
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
@@ -50,14 +52,32 @@ begin
 
     -- preliminary:
     -- 0x01000000 is the start of the IO space
-    uart_we_n <= '0' when (address(31 downto 24) = x"01" and we_n = '0') else '1';
+    tx_uart_we_n <= as_n when (address(31 downto 24) = x"01" and we_n = '0') else '1';
 
     -- RAM decoding
-    upper_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
-    lower_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
+    upper_we_n <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
+    lower_we_n <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
 
     -- 68000 data_in generation
-    data_in <= ram_data_out when (address(31 downto 24) = x"00") else uart_status & uart_status;
+    proc_addr_decoder: process(address, as_n, we_n, uart_status, uart_rxdata, ram_data_out)
+    begin
+        rx_uart_read_stb <= '0';
+        data_in <= (others => '0');
+        
+        if (we_n = '1' and as_n = '0') then
+            if (address(31 downto 24) = x"00") then
+                data_in <= ram_data_out;
+            else
+                if (address(2) = '0') then 
+                    data_in <= x"00" & uart_status;
+                else
+                    rx_uart_read_stb <= '1';
+                    data_in <= x"00" & uart_rxdata;
+                end if;
+            end if;
+        end if;
+
+    end process proc_addr_decoder;
 
     leds <= uart_status;
 
@@ -116,7 +136,7 @@ begin
             data_in     => data_in,
             data_out    => data_out,
             addr        => address,
-            as          => as,
+            as          => as_n,
             rw          => we_n,
             lds         => lds_n,
             uds         => uds_n,
@@ -145,12 +165,11 @@ begin
         (
             clk         => clk,
             reset_n     => reset_n,
-            we_n        => uart_we_n,
-            --data_in     => data_out(7 downto 0),
-            data_in     => uart_rxdata, -- loopback from rx uart
+            we_n        => tx_uart_we_n,
+            data_in     => data_out(7 downto 0),
             baud_stb    => tx_baud_stb,
             serial_out  => serial_out,
-            ready       => uart_ready
+            ready       => tx_uart_empty
         );
 
     u_rxbaudgen: entity work.baudgen(rtl)
@@ -173,12 +192,12 @@ begin
             reset_n     => reset_n,
             baud_stb    => rx_baud_stb,
             serial_in   => serial_in,
-            read_stb    => '1',
+            read_stb    => rx_uart_read_stb,
             data_out    => uart_rxdata,
-            data_ready  => open
+            data_ready  => rx_uart_full
         );
 
     -- generate uart status register
-    uart_status <= "0000000" & uart_ready;
+    uart_status <= "000000" & rx_uart_full & tx_uart_empty;
 
 end rtl;

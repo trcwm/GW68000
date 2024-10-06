@@ -1,4 +1,4 @@
-; write 0xAA to the UART continually
+; echo the rx uart to the tx uart
 .org $0000
 
     dl $00000200
@@ -7,25 +7,17 @@
 start:
 
 print:
-    eor D0, D0              ; zero D0
-    move.l #$01000000, A0   ; uart write address
-    lea  text, A1           ; address of string
-
+    move.l #$01000000, A0   ; tx uart write and status address
+    move.l #$01000004, A1   ; rx uart read address
 again:
-    ; wait for the UART to be ready
-wait:
-    move.l (A0), D1         ; read status
-    cmp.b #1, D1
-    bne.s wait
+    ; wait for the rx UART to be ready
+    move.l (A0), D0         ; read uart status register
+    and.l  #2, D0           ; mask RX full bit
+    beq.s  again            ; jump if bit not set
 
-    move.b (A1)+, D0        ; load character in D0
-    cmp.b #0, D0
-    beq.s exit
-    move.b D0, (A0)         ; write character to uart
-    jmp again
+    ; read the rx uart
+    move.l (A1), D0
 
-exit:
-    jmp print
-
-text:
-    db "Hello, world!",10,13,0
+    ; copy to tx uart
+    move.l D0, (A0)
+    jmp    again
