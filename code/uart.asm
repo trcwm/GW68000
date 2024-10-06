@@ -5,7 +5,7 @@
     dl $00000008
 
 start:
-    move.l #01000000, A0    ; uart write address
+    move.l #$01000000, A0   ; uart write address
     move.b #$AA, (A0)       ; write to uart tx data register
     jmp start
     

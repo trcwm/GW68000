@@ -10,6 +10,11 @@ use ieee.std_logic_1164.all;
 use work.TG68_fast;
 
 entity gw68000_top is
+    generic
+    (
+        g_upper_ram       : string := "boot_pper.txt";
+        g_lower_ram       : string := "boot_lower.txt"
+    );
     port
     (
         clk             : in std_logic;
@@ -55,10 +60,10 @@ begin
     --   RAM
     -- ================================================================
 
-    u_ram_upper: entity work.BlockRAM(rtl)
+    u_ram_upper: entity work.BlockRAM(behavioral)
         generic map
         (
-            init_file  => "boot_upper.txt",
+            init_file  => g_upper_ram,
             data_width => 8,
             addr_width => 8
         )
@@ -71,10 +76,10 @@ begin
             data_out_r  => data_in(15 downto 8)
         );
 
-    u_ram_lower: entity work.BlockRAM(rtl)
+    u_ram_lower: entity work.BlockRAM(behavioral)
         generic map
         (
-            init_file  => "boot_lower.txt",
+            init_file  => g_lower_ram,
             data_width => 8,
             addr_width => 8
         )

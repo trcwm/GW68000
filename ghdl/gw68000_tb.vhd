@@ -38,6 +38,11 @@ begin
     end process proc_clk;
 
     u_dut: entity work.gw68000_top(rtl)
+        generic map
+        (
+            g_upper_ram => "boot_upper.txt",
+            g_lower_ram => "boot_lower.txt"
+        )
         port map
         (
             clk             => clk,
