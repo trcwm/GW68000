@@ -5,44 +5,40 @@ IO_PORT "clk12M" IO_TYPE=LVTTL33 PULL_MODE=UP;
 IO_LOC "userbutton" 77;
 IO_PORT "userbutton" IO_TYPE=LVTTL33 PULL_MODE=UP;
 
-IO_LOC "led" 86;
-IO_PORT "led" PULL_MODE=UP DRIVE=8;
-
 /*
    FT2232H-56Q BDBUS pins:
    BDBUS0 pin 16 TXD (out from FT2232)
    BDBUS1 pin 15 RXD (in)
-   BDBUS2 pin 14 RST_n (out)
+   BDBUS2 pin 14 RTS_n (out)
    BDBUS3 pin 13 CTS_n (in)
    BDBUS4 pin 11 DTR_n (out)
+*/
 
+// naming w.r.t the CPU
 IO_LOC "serial_out" 15;
-IO_PORT serial_out" IO_TYPE=LVTTL33;
+IO_PORT "serial_out" IO_TYPE=LVTTL33;
 IO_LOC "serial_in" 16;
 IO_PORT "serial_in" IO_TYPE=LVTTL33;
+IO_LOC "serial_cts_n" 14;
+IO_PORT "serial_cts_n" IO_TYPE=LVTTL33;
 
-*/
+IO_LOC "leds[0]" 86;
+IO_PORT "leds[0]" IO_TYPE=LVTTL33;
+IO_LOC "leds[1]" 85;
+IO_PORT "leds[1]" IO_TYPE=LVTTL33;
+IO_LOC "leds[2]" 84;
+IO_PORT "leds[2]" IO_TYPE=LVTTL33;
+IO_LOC "leds[3]" 83;
+IO_PORT "leds[3]" IO_TYPE=LVTTL33;
+IO_LOC "leds[4]" 82;
+IO_PORT "leds[4]" IO_TYPE=LVTTL33;
+IO_LOC "leds[5]" 81;
+IO_PORT "leds[5]" IO_TYPE=LVTTL33;
+IO_LOC "leds[6]" 80;
+IO_PORT "leds[6]" IO_TYPE=LVTTL33;
+IO_LOC "leds[7]" 79;
+IO_PORT "leds[7]" IO_TYPE=LVTTL33;
 
-/*
-
-IO_LOC "LEDS[0]" 86;
-IO_PORT "LEDS[0]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[1]" 85;
-IO_PORT "LEDS[1]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[2]" 84;
-IO_PORT "LEDS[2]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[3]" 83;
-IO_PORT "LEDS[3]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[4]" 82;
-IO_PORT "LEDS[4]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[5]" 81;
-IO_PORT "LEDS[5]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[6]" 80;
-IO_PORT "LEDS[6]" IO_TYPE=LVTTL33;
-IO_LOC "LEDS[7]" 79;
-IO_PORT "LEDS[7]" IO_TYPE=LVTTL33;
-
-*/
 
 /*
     GW1NR embedded SDRAM

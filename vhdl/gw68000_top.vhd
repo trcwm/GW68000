@@ -11,9 +11,13 @@ use work.TG68_fast;
 entity gw68000_top is
     port
     (
-        clk         : in std_logic;
-        reset_n     : in std_logic;
-        spy_PC      : out std_logic_vector(31 downto 0)
+        clk             : in std_logic;
+        reset_n         : in std_logic;
+        leds            : out std_logic_vector(7 downto 0);
+        serial_out      : out std_logic;
+        serial_in       : in std_logic;
+        serial_cts_n    : in std_logic;
+        spy_PC          : out std_logic_vector(31 downto 0)
     );
 end;
 
@@ -26,10 +30,19 @@ architecture rtl of gw68000_top is
     signal data_in  : std_logic_vector(15 downto 0);
 
     signal upper_we_n, lower_we_n : std_logic;
+
+    signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
 
     upper_we_n <= we_n or uds_n;
     lower_we_n <= we_n or lds_n;
+
+    leds(7 downto 1) <= spy_PC_local(7 downto 1);
+    leds(0)          <= not serial_cts_n;
+
+    serial_out <= '1';
+
+    spy_PC <= spy_PC_local;
 
     u_ram_upper: entity work.BlockRAM(rtl)
         generic map
@@ -77,7 +90,7 @@ begin
             rw          => we_n,
             lds         => lds_n,
             uds         => uds_n,
-            spy_PC      => spy_PC
+            spy_PC      => spy_PC_local
         );
 
 end rtl;
