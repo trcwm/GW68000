@@ -35,6 +35,10 @@ architecture rtl of gw68000_top is
     signal data_out : std_logic_vector(15 downto 0);
     signal data_in  : std_logic_vector(15 downto 0);
 
+    signal ram_data_out : std_logic_vector(15 downto 0);
+    signal uart_status  : std_logic_vector(7 downto 0);
+    signal uart_ready   : std_logic;
+
     signal upper_we_n, lower_we_n, uart_we_n : std_logic;
     signal baud_stb : std_logic;
 
@@ -51,8 +55,13 @@ begin
     upper_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
     lower_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
 
-    leds(7 downto 1) <= spy_PC_local(7 downto 1);
-    leds(0)          <= not serial_cts_n;
+    -- 68000 data_in generation
+    data_in <= ram_data_out when (address(31 downto 24) = x"00") else uart_status & uart_status;
+
+    leds <= uart_status;
+
+    --leds(7 downto 1) <= spy_PC_local(7 downto 1);
+    --leds(0)          <= not serial_cts_n;
 
     spy_PC <= spy_PC_local;
 
@@ -73,7 +82,7 @@ begin
             address     => address(8 downto 1),
             we_n        => upper_we_n,
             data_in     => data_out(15 downto 8),
-            data_out_r  => data_in(15 downto 8)
+            data_out_r  => ram_data_out(15 downto 8)
         );
 
     u_ram_lower: entity work.BlockRAM(behavioral)
@@ -89,7 +98,7 @@ begin
             address     => address(8 downto 1),
             we_n        => lower_we_n,
             data_in     => data_out(7 downto 0),
-            data_out_r  => data_in(7 downto 0)
+            data_out_r  => ram_data_out(7 downto 0)
         );
 
     -- ================================================================
@@ -138,7 +147,11 @@ begin
             we_n        => uart_we_n,
             data_in     => data_out(7 downto 0),
             baud_stb    => baud_stb,
-            serial_out  => serial_out
+            serial_out  => serial_out,
+            ready       => uart_ready
         );
+
+    -- generate uart status register
+    uart_status <= "0000000" & uart_ready;
 
 end rtl;
