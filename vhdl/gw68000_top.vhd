@@ -12,7 +12,7 @@ use work.TG68_fast;
 entity gw68000_top is
     generic
     (
-        g_upper_ram       : string := "boot_pper.txt";
+        g_upper_ram       : string := "boot_upper.txt";
         g_lower_ram       : string := "boot_lower.txt"
     );
     port
@@ -136,7 +136,7 @@ begin
             clk         => clk,
             reset_n     => reset_n,
             we_n        => uart_we_n,
-            data_in     => data_in(7 downto 0),
+            data_in     => data_out(7 downto 0),
             baud_stb    => baud_stb,
             serial_out  => serial_out
         );

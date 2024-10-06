@@ -6,6 +6,6 @@
 
 start:
     move.l #$01000000, A0   ; uart write address
-    move.b #$AA, (A0)       ; write to uart tx data register
+    move.b #65, (A0)        ; write ASCII 'A' to uart tx data register
     jmp start
     

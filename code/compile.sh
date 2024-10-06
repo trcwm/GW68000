@@ -11,3 +11,4 @@ mv uart.asm.bin uart.bin
 mv uart.asm.lst uart.lst
 ../tools/build/splitbin loop.bin
 ../tools/build/splitbin uart.bin
+

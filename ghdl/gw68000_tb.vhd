@@ -26,11 +26,11 @@ begin
         wait;
     end process proc_sim;
 
-    -- generate a 1 MHz clock for simulation
+    -- generate a 12 MHz clock for simulation
     proc_clk: process
     begin
         if (do_sim = '1') then
-            wait for 500 ns;
+            wait for 41.66 ns;
             clk <= not clk;
         else
             wait;

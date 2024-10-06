@@ -41,18 +41,35 @@ int main(int argc, const char *argv[])
     std::ofstream lowerFile(lowerFilename);
     std::ofstream upperFile(upperFilename);
 
+    bool genVHDL = argc > 2;
+    int index = 0;
     while(!infile.eof())
     {
         char buffer[100];
         uint8_t mybyte;
 
-        infile.read((char*)&mybyte, 1);
-        sprintf(buffer, "%02X\n", mybyte);
-        upperFile << buffer;
+        if (!genVHDL)
+        {
+            infile.read((char*)&mybyte, 1);
+            sprintf(buffer, "%02X\n", mybyte);
+            upperFile << buffer;
 
-        infile.read((char*)&mybyte, 1);
-        sprintf(buffer, "%02X\n", mybyte);
-        lowerFile << buffer;
+            infile.read((char*)&mybyte, 1);
+            sprintf(buffer, "%02X\n", mybyte);
+            lowerFile << buffer;
+        }
+        else
+        {
+            infile.read((char*)&mybyte, 1);
+            sprintf(buffer, "    ram_content(%d) <= x\"%02X\"\n", index, mybyte);
+            upperFile << buffer;
+
+            infile.read((char*)&mybyte, 1);
+            sprintf(buffer, "    ram_content(%d) <= x\"%02X\"\n", index, mybyte);
+            lowerFile << buffer;
+
+            index++;
+        }
     }
 
     return EXIT_SUCCESS;

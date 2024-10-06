@@ -25,6 +25,11 @@ architecture rtl of tec0117_top is
 begin
 
     u_gw68000: entity gw68000_top(rtl)
+        generic map
+        (
+            g_upper_ram     => "/storage/programming/gw68000/ghdl/boot_upper.txt",
+            g_lower_ram     => "/storage/programming/gw68000/ghdl/boot_lower.txt"
+        )
         port map
         (
             clk             => clk12M,
