@@ -8,8 +8,10 @@
         <File path="src/tec0117_top.vhd.vhd" type="file.vhdl" enable="1"/>
         <File path="/storage/programming/gw68000/contrib/TG68.vhd" type="file.vhdl" enable="1"/>
         <File path="/storage/programming/gw68000/contrib/TG68_fast.vhd" type="file.vhdl" enable="1"/>
+        <File path="/storage/programming/gw68000/vhdl/baudgen.vhd" type="file.vhdl" enable="1"/>
         <File path="/storage/programming/gw68000/vhdl/blockram.vhd" type="file.vhdl" enable="1"/>
         <File path="/storage/programming/gw68000/vhdl/gw68000_top.vhd" type="file.vhdl" enable="1"/>
+        <File path="/storage/programming/gw68000/vhdl/tx_uart.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gw68000.cst" type="file.cst" enable="1"/>
         <File path="src/gw68000.sdc" type="file.sdc" enable="1"/>
     </FileList>

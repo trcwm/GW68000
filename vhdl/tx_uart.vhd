@@ -12,7 +12,7 @@ entity tx_uart is
         clk         : in std_logic;
         reset_n     : in std_logic;
         baud_stb    : in std_logic;
-        we          : in std_logic;
+        we_n        : in std_logic;
         data_in     : in std_logic_vector(7 downto 0);
         ready       : out std_logic;    -- ready to accept new tx data
         serial_out  : out std_logic
@@ -70,7 +70,7 @@ begin
         end if;
     end process proc_shifter;
 
-    proc_state: process(state, we, baud_stb, bitcount)
+    proc_state: process(state, we_n, baud_stb, bitcount)
     begin
         shift       <= '0';
         load        <= '0';
@@ -78,7 +78,7 @@ begin
 
         case state is
             when S_idle =>
-                if (we = '1') then
+                if (we_n = '0') then
                     load <= '1';
                     next_state <= S_tx;
                 end if;

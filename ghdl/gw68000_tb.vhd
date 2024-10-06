@@ -40,8 +40,10 @@ begin
     u_dut: entity work.gw68000_top(rtl)
         port map
         (
-            clk     => clk,
-            reset_n => reset_n
+            clk             => clk,
+            reset_n         => reset_n,
+            serial_in       => '0',
+            serial_cts_n    => '1'
         );
     
 end tb;

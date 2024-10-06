@@ -2,6 +2,7 @@
 -- Version          Description
 --   0.1:           initial version
 --   0.2:           changed TG68_fast to TG68, add spy program counter.
+--   0.3:           added tx uart
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -29,20 +30,30 @@ architecture rtl of gw68000_top is
     signal data_out : std_logic_vector(15 downto 0);
     signal data_in  : std_logic_vector(15 downto 0);
 
-    signal upper_we_n, lower_we_n : std_logic;
+    signal upper_we_n, lower_we_n, uart_we_n : std_logic;
+    signal baud_stb : std_logic;
 
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
 
-    upper_we_n <= we_n or uds_n;
-    lower_we_n <= we_n or lds_n;
+    -- address decoding:
+
+    -- preliminary:
+    -- 0x01000000 is the start of the IO space
+    uart_we_n <= '0' when (address(31 downto 24) = x"01" and we_n = '0') else '1';
+
+    -- RAM decoding
+    upper_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
+    lower_we_n <= '0' when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
 
     leds(7 downto 1) <= spy_PC_local(7 downto 1);
     leds(0)          <= not serial_cts_n;
 
-    serial_out <= '1';
-
     spy_PC <= spy_PC_local;
+
+    -- ================================================================
+    --   RAM
+    -- ================================================================
 
     u_ram_upper: entity work.BlockRAM(rtl)
         generic map
@@ -76,6 +87,10 @@ begin
             data_out_r  => data_in(7 downto 0)
         );
 
+    -- ================================================================
+    --   68k core
+    -- ================================================================
+
     u_cpu: entity work.TG68(logic)
         port map
         (
@@ -91,6 +106,34 @@ begin
             lds         => lds_n,
             uds         => uds_n,
             spy_PC      => spy_PC_local
+        );
+
+    -- ================================================================
+    --   IO peripherals
+    -- ================================================================
+
+    u_baudgen: entity work.baudgen(rtl)
+        generic map
+        (
+            g_clkrate   => 12000000,
+            g_baudrate  => 115200            
+        )
+        port map
+        (
+            clk          => clk,
+            reset_n      => reset_n,
+            baud_stb_out => baud_stb
+        );
+
+    u_tx_uart: entity work.tx_uart(rtl)
+        port map
+        (
+            clk         => clk,
+            reset_n     => reset_n,
+            we_n        => uart_we_n,
+            data_in     => data_in(7 downto 0),
+            baud_stb    => baud_stb,
+            serial_out  => serial_out
         );
 
 end rtl;

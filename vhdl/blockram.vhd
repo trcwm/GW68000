@@ -27,7 +27,7 @@ entity BlockRAM is
     );
 end BlockRAM;
 
-architecture rtl of BlockRAM is
+architecture behavioral of BlockRAM is
     constant num_entries : integer := 2**addr_width;
     type ram_t is array(0 to num_entries-1) of std_logic_vector(data_in'range);
 
@@ -72,7 +72,7 @@ begin
         end if; -- rising edge
     end process proc_clk;
 
-end rtl;
+end behavioral;
 
 
 architecture rtl of BlockRAM is

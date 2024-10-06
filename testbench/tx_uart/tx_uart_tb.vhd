@@ -12,10 +12,8 @@ architecture tb of tx_uart_tb is
     signal do_sim  : std_logic := '1';
     signal clk     : std_logic := '0';
     signal reset_n : std_logic := '1';
-    signal we      : std_logic := '0';
+    signal we_n    : std_logic := '1';
 
-
-    signal bauddiv : unsigned(7 downto 0);
     signal baudstb : std_logic;
 
     constant baudmaxcount : unsigned(7 downto 0) := to_unsigned(16, 8);
@@ -28,9 +26,9 @@ begin
         reset_n <= '0';
         wait for 8 us;
         reset_n <= '1';
-        we      <= '1'; -- strobe uart write
+        we_n    <= '0'; -- strobe uart write
         wait for 2 us;
-        we      <= '0'; -- strobe uart write
+        we_n    <= '1'; -- strobe uart write
         
         wait for 400 us;
         do_sim <= '0';  -- end simulation
@@ -48,24 +46,18 @@ begin
         end if;
     end process proc_clk;
 
-    -- generate a baud rate strobe
-    proc_baud: process(clk, reset_n)
-    begin
-        if rising_edge(clk) then
-            baudstb <= '0';    -- default value
+    u_baudgen: entity work.baudgen(rtl)
+        generic map
+        (
+            g_baudrate => 1000000
+        )
+        port map
+        (
+            clk             => clk,
+            reset_n         => reset_n,
+            baud_stb_out    => baudstb
+        );
 
-            if (reset_n = '0') then
-                bauddiv <= (others => '0');
-            else
-                bauddiv <= bauddiv + 1;
-                if (bauddiv = baudmaxcount) then
-                    bauddiv <= (others => '0');
-                    baudstb <= '1';
-                end if;
-            end if;
-        end if;
-    end process proc_baud;
-        
     u_dut: entity work.tx_uart(rtl)
         port map
         (
@@ -73,7 +65,7 @@ begin
             reset_n     => reset_n,
             baud_stb    => baudstb,
             data_in     => x"AA",
-            we          => we
+            we_n        => we_n
         );
     
 end tb;
