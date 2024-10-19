@@ -1,6 +1,9 @@
 
-IO_LOC "clk12M" 35;
-IO_PORT "clk12M" IO_TYPE=LVTTL33 PULL_MODE=UP;
+IO_LOC "clk100M" 63;
+IO_PORT "clk100M" IO_TYPE=LVTTL33 PULL_MODE=UP;
+
+//IO_LOC "clk12M" 35;
+//IO_PORT "clk12M" IO_TYPE=LVTTL33 PULL_MODE=UP;
 
 IO_LOC "userbutton" 77;
 IO_PORT "userbutton" IO_TYPE=LVTTL33 PULL_MODE=UP;
@@ -42,6 +45,7 @@ IO_PORT "leds[7]" IO_TYPE=LVTTL33;
 
 /*
     GW1NR embedded SDRAM
+*/
 
 IO_PORT "O_sdram_clk"    IO_TYPE=LVTTL33
 IO_PORT "O_sdram_cke"    IO_TYPE=LVTTL33
@@ -83,5 +87,3 @@ IO_PORT "O_sdram_addr[8]"  IO_TYPE=LVTTL33
 IO_PORT "O_sdram_addr[9]"  IO_TYPE=LVTTL33
 IO_PORT "O_sdram_addr[10]" IO_TYPE=LVTTL33
 IO_PORT "O_sdram_addr[11]" IO_TYPE=LVTTL33
-
-*/

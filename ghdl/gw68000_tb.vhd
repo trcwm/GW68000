@@ -9,7 +9,8 @@ end entity;
 
 architecture tb of gw68000_tb is
     signal do_sim  : std_logic := '1';
-    signal clk     : std_logic := '0';
+    signal clk100M : std_logic := '0';
+    signal clk12M5 : std_logic := '0';
     signal reset_n : std_logic := '1';
 begin
 
@@ -26,16 +27,24 @@ begin
         wait;
     end process proc_sim;
 
-    -- generate a 12 MHz clock for simulation
-    proc_clk: process
+    -- generate a 100 MHz clock for simulation
+    proc_clk100M: process
     begin
         if (do_sim = '1') then
-            wait for 41.66 ns;
-            clk <= not clk;
+            wait for 5 ns;
+            clk100M <= not clk100M;
         else
             wait;
         end if;
-    end process proc_clk;
+    end process proc_clk100M;
+
+    u_clkgen: entity work.clkgen(rtl)
+        port map
+        (
+            clk100M => clk100M,
+            reset_n => reset_n,
+            clk12M5 => clk12M5
+        );
 
     u_dut: entity work.gw68000_top(rtl)
         generic map
@@ -45,7 +54,8 @@ begin
         )
         port map
         (
-            clk             => clk,
+            clk100M         => clk100M,
+            clk12M5         => clk12M5,
             reset_n         => reset_n,
             serial_in       => '0',
             serial_cts_n    => '1'
