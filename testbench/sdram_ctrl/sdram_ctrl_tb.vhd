@@ -53,12 +53,12 @@ begin
 
             lds_n       => '1',
             uds_n       => '1',
-            data_in     => (others => '0'),
-            data_out    => open,
-            addr        => (others => '0'),
+            data_i      => (others => '0'),
+            data_o      => open,
+            addr_i      => (others => '0'),
             we_n        => '1',
-            wr_stb      => '0',
-            refresh_stb => '0'
+            rw_i        => '0',
+            refresh_i   => '0'
         );
     
 end tb;

@@ -1,7 +1,6 @@
 -- Released under the 3-Clause BSD License:
 --
 -- Copyright 2010-2019 Matthew Hagerty (matthew <at> dnotq <dot> io)
--- Copyright 2024      Niels Moseley (n.a.moseley <at> moseleyinstruments <dot> com)
 --
 -- Redistribution and use in source and binary forms, with or without
 -- modification, are permitted provided that the following conditions are met:
@@ -35,11 +34,6 @@
 --
 -- Change Log:
 --
-
--- Okt 19, 2024
---    Changed to 64MBit SDRAM
---    Updates signal names to reflect active high or low
---
 -- Dec 14, 2019
 --    Changed SDRAM input data setup to ST_RAS1 so it will be correctly
 --    registered during ST_RAS2.
@@ -55,41 +49,43 @@
 --    Initial implementation.
 
 
-library IEEE;
+library IEEE, UNISIM;
 use IEEE.std_logic_1164.all;
+use IEEE.std_logic_unsigned.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-entity sdram_ctrl is
+entity sdram_simple is
    port(
       -- Host side
-      clk            : in std_logic;            -- Master clock, 100 MHz
-      reset_n        : in std_logic := '0';     -- Reset, active high
+      clk_100m0_i    : in std_logic;            -- Master clock
+      reset_i        : in std_logic := '0';     -- Reset, active high
       refresh_i      : in std_logic := '0';     -- Initiate a refresh cycle, active high
       rw_i           : in std_logic := '0';     -- Initiate a read or write operation, active high
-      we_n           : in std_logic := '0';     -- Write enable, active low
-      addr_i         : in std_logic_vector(21 downto 0);   -- Address from host to SDRAM
+      we_i           : in std_logic := '0';     -- Write enable, active low
+      addr_i         : in std_logic_vector(23 downto 0);   -- Address from host to SDRAM
       data_i         : in std_logic_vector(15 downto 0);   -- Data from host to SDRAM
-      uds_n          : in std_logic;            -- Data upper byte enable, active low
-      lds_n          : in std_logic;            -- Data lower byte enable, active low
+      ub_i           : in std_logic;            -- Data upper byte enable, active low
+      lb_i           : in std_logic;            -- Data lower byte enable, active low
       ready_o        : out std_logic := '0';    -- Set to '1' when the memory is ready
       done_o         : out std_logic := '0';    -- Read, write, or refresh, operation is done
       data_o         : out std_logic_vector(15 downto 0);   -- Data from SDRAM to host
 
       -- SDRAM side
-      sdram_cke      : out std_logic;           -- Clock-enable to SDRAM
-      sdram_cs_n     : out std_logic;           -- Chip-select to SDRAM
-      sdram_ras_n    : out std_logic;           -- SDRAM row address strobe
-      sdram_cas_n    : out std_logic;           -- SDRAM column address strobe
-      sdram_wen_n    : out std_logic;           -- SDRAM write enable
-      sdram_ba       : out std_logic_vector( 1 downto 0);   -- SDRAM bank address
-      sdram_addr     : out std_logic_vector(11 downto 0);   -- SDRAM row/column address
-      sdram_dq       : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
-      sdram_dqm      : out std_logic_vector(1 downto 0)     -- Enable upper-byte of SDRAM databus if true
+      sdCke_o        : out std_logic;           -- Clock-enable to SDRAM
+      sdCe_bo        : out std_logic;           -- Chip-select to SDRAM
+      sdRas_bo       : out std_logic;           -- SDRAM row address strobe
+      sdCas_bo       : out std_logic;           -- SDRAM column address strobe
+      sdWe_bo        : out std_logic;           -- SDRAM write enable
+      sdBs_o         : out std_logic_vector( 1 downto 0);   -- SDRAM bank address
+      sdAddr_o       : out std_logic_vector(12 downto 0);   -- SDRAM row/column address
+      sdData_io      : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
+      sdDqmh_o       : out std_logic;           -- Enable upper-byte of SDRAM databus if true
+      sdDqml_o       : out std_logic            -- Enable lower-byte of SDRAM databus if true
    );
 end entity;
 
-architecture rtl of sdram_ctrl is
+architecture rtl of sdram_simple is
 
 
    -- SDRAM controller states.
@@ -101,10 +97,10 @@ architecture rtl of sdram_ctrl is
 
    -- SDRAM mode register data sent on the address bus.
    --
-   -- | A11-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
+   -- | A12-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
    -- | reserved| wr burst |reserved| CAS Ltncy|addr mode| burst len|
-   --      0  0      0       0   0    0  1  0       0      0  0  0
-   constant MODE_REG : std_logic_vector(11 downto 0) := "00" & "0" & "00" & "010" & "0" & "000";
+   --   0  0  0      0       0   0    0  1  0       0      0  0  0
+   constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "010" & "0" & "000";
 
    -- SDRAM commands combine SDRAM inputs: cs, ras, cas, we.
    subtype cmd_type is unsigned(3 downto 0);
@@ -120,10 +116,10 @@ architecture rtl of sdram_ctrl is
    signal cmd_x                  : cmd_type;
 
    signal bank_s                 : std_logic_vector( 1 downto 0);
-   signal row_s                  : std_logic_vector(11 downto 0);
-   signal col_s                  : std_logic_vector( 7 downto 0);
-   signal addr_r                 : std_logic_vector(11 downto 0);
-   signal addr_x                 : std_logic_vector(11 downto 0);    -- SDRAM row/column address.
+   signal row_s                  : std_logic_vector(12 downto 0);
+   signal col_s                  : std_logic_vector( 8 downto 0);
+   signal addr_r                 : std_logic_vector(12 downto 0);
+   signal addr_x                 : std_logic_vector(12 downto 0);    -- SDRAM row/column address.
    signal sd_dout_r              : std_logic_vector(15 downto 0);
    signal sd_dout_x              : std_logic_vector(15 downto 0);
    signal sd_busdir_r            : std_logic;
@@ -145,30 +141,30 @@ begin
 
    -- All signals to SDRAM buffered.
 
-   (sdram_cs_n, sdram_ras_n, sdram_cas_n, sdram_wen_n) <= cmd_r;   -- SDRAM operation control bits
-   sdram_cke     <= cke_r;      -- SDRAM clock enable
-   sdram_ba      <= bank_r;     -- SDRAM bank address
-   sdram_addr    <= addr_r;     -- SDRAM address
-   sdram_dq      <= sd_dout_r when sd_busdir_r = '1' else (others => 'Z');   -- SDRAM data bus.
-   sdram_dqm(1)  <= sd_dqmu_r;  -- SDRAM high data byte enable, active low
-   sdram_dqm(0)  <= sd_dqml_r;  -- SDRAM low date byte enable, active low
+   (sdCe_bo, sdRas_bo, sdCas_bo, sdWe_bo) <= cmd_r;   -- SDRAM operation control bits
+   sdCke_o     <= cke_r;      -- SDRAM clock enable
+   sdBs_o      <= bank_r;     -- SDRAM bank address
+   sdAddr_o    <= addr_r;     -- SDRAM address
+   sdData_io   <= sd_dout_r when sd_busdir_r = '1' else (others => 'Z');   -- SDRAM data bus.
+   sdDqmh_o    <= sd_dqmu_r;  -- SDRAM high data byte enable, active low
+   sdDqml_o    <= sd_dqml_r;  -- SDRAM low date byte enable, active low
 
    -- Signals back to host.
    ready_o <= ready_r;
-   data_o  <= buf_dout_r;
+   data_o <= buf_dout_r;
 
-   -- 21  20  | 19 18 17 16 15 14 13 12 11 10 09 08 | 07 06 05 04 03 02 01 00 |
-   -- BS0 BS1 |        ROW (A11-A0)  4096 rows      |   COL (A7-A0)  256 cols |
+   -- 23  22  | 21 20 19 18 17 16 15 14 13 12 11 10 09 | 08 07 06 05 04 03 02 01 00 |
+   -- BS0 BS1 |        ROW (A12-A0)  8192 rows         |   COL (A8-A0)  512 cols    |
+   bank_s <= addr_i(23 downto 22);
+   row_s <= addr_i(21 downto 9);
+   col_s <= addr_i(8 downto 0);
 
-   bank_s <= addr_i(21 downto 20);
-   row_s <= addr_i(19 downto 8);
-   col_s <= addr_i(7 downto 0);
 
    process (
-        state_r, timer_r, refcnt_r, cke_r, addr_r, sd_dout_r, sd_busdir_r, sd_dqmu_r, sd_dqml_r, ready_r,
-        bank_s, row_s, col_s,
-        rw_i, refresh_i, addr_i, data_i, we_n, uds_n, lds_n,
-        buf_dout_r, sdram_dq)
+   state_r, timer_r, refcnt_r, cke_r, addr_r, sd_dout_r, sd_busdir_r, sd_dqmu_r, sd_dqml_r, ready_r,
+   bank_s, row_s, col_s,
+   rw_i, refresh_i, addr_i, data_i, we_i, ub_i, lb_i,
+   buf_dout_r, sdData_io)
    begin
 
       state_x     <= state_r;       -- Stay in the same state unless changed.
@@ -323,11 +319,11 @@ begin
             -- READ or WRITE command will be active in the next cycle.
             state_x <= ST_RW;
 
-            if we_n = '0' then
+            if we_i = '0' then
                cmd_x <= CMD_WRITE;
                sd_busdir_x <= '1';     -- The SDRAM latches the input data with the command.
-               sd_dqmu_x <= uds_n;
-               sd_dqml_x <= lds_n;
+               sd_dqmu_x <= ub_i;
+               sd_dqml_x <= lb_i;
             else
                cmd_x <= CMD_READ;
             end if;
@@ -342,7 +338,7 @@ begin
             -- 30ns since activate.
             -- Data from the SDRAM will be registered on the next clock.
             state_x <= ST_RAS2;
-            buf_dout_x <= sdram_dq;
+            buf_dout_x <= sdData_io;
 
          when ST_RAS2 =>
             -- 40ns since activate.
@@ -363,31 +359,31 @@ begin
       end if;
    end process;
 
-   process (clk)
+   process (clk_100m0_i)
    begin
-      if rising_edge(clk) then
-        if reset_n = '0' then
-            state_r  <= ST_INIT_WAIT;
-            timer_r  <= 0;
-            cmd_r    <= CMD_NOP;
-            cke_r    <= '0';
-            ready_r  <= '0';
-        else
-            state_r     <= state_x;
-            timer_r     <= timer_x;
-            refcnt_r    <= refcnt_x;
-            cke_r       <= cke_x;         -- CKE to SDRAM.
-            cmd_r       <= cmd_x;         -- Command to SDRAM.
-            bank_r      <= bank_x;        -- Bank to SDRAM.
-            addr_r      <= addr_x;        -- Address to SDRAM.
-            sd_dout_r   <= sd_dout_x;     -- Data to SDRAM.
-            sd_busdir_r <= sd_busdir_x;   -- SDRAM bus direction.
-            sd_dqmu_r   <= sd_dqmu_x;     -- Upper byte enable to SDRAM.
-            sd_dqml_r   <= sd_dqml_x;     -- Lower byte enable to SDRAM.
-            ready_r     <= ready_x;
-            buf_dout_r  <= buf_dout_x;
+      if rising_edge(clk_100m0_i) then
+      if reset_i = '1' then
+         state_r  <= ST_INIT_WAIT;
+         timer_r  <= 0;
+         cmd_r    <= CMD_NOP;
+         cke_r    <= '0';
+         ready_r  <= '0';
+      else
+         state_r     <= state_x;
+         timer_r     <= timer_x;
+         refcnt_r    <= refcnt_x;
+         cke_r       <= cke_x;         -- CKE to SDRAM.
+         cmd_r       <= cmd_x;         -- Command to SDRAM.
+         bank_r      <= bank_x;        -- Bank to SDRAM.
+         addr_r      <= addr_x;        -- Address to SDRAM.
+         sd_dout_r   <= sd_dout_x;     -- Data to SDRAM.
+         sd_busdir_r <= sd_busdir_x;   -- SDRAM bus direction.
+         sd_dqmu_r   <= sd_dqmu_x;     -- Upper byte enable to SDRAM.
+         sd_dqml_r   <= sd_dqml_x;     -- Lower byte enable to SDRAM.
+         ready_r     <= ready_x;
+         buf_dout_r  <= buf_dout_x;
 
-        end if;
+      end if;
       end if;
    end process;
 
