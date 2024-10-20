@@ -8,6 +8,7 @@ ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/tx_uart.vhd
 ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/rx_uart.vhd
 ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/sdram_ctrl.vhd
 ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/clkgen.vhd
+ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/persistence.vhd
 ghdl -a -fsynopsys -fexplicit --std=08 ../vhdl/gw68000_top.vhd
 ghdl -a -fsynopsys -fexplicit --std=08 gw68000_tb.vhd
 ghdl -e -fsynopsys -fexplicit --std=08 gw68000_tb

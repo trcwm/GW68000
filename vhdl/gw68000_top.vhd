@@ -50,6 +50,7 @@ architecture rtl of gw68000_top is
     signal sdram_data_out   : std_logic_vector(15 downto 0);
     signal sdram_we_n       : std_logic;
     signal sdram_rw         : std_logic;
+    signal sdram_busy       : std_logic;
     signal uart_status      : std_logic_vector(7 downto 0);
     
     signal uart_rxdata  : std_logic_vector(7 downto 0);
@@ -59,6 +60,7 @@ architecture rtl of gw68000_top is
     signal rx_uart_full, tx_uart_empty : std_logic;
     signal rx_uart_read_stb : std_logic;
 
+    signal sdram_rw_p   : std_logic;
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
 
@@ -91,7 +93,8 @@ begin
         rx_uart_read_stb <= '0';
         data_in <= (others => '0');
         
-        if (we_n = '1' and as_n = '0') then
+        --if (we_n = '1' and as_n = '0') then
+        if (we_n = '1') then
             case (address(31 downto 24)) is
                 when x"00" =>
                     -- block ram for booting
@@ -112,10 +115,18 @@ begin
 
     end process proc_addr_decoder;
 
-    leds <= uart_status;
+    -- make the sdram_rw signal persistent
+    -- so we can easily display it on an LED
+    u_persistent: entity work.persistence(rtl)
+        port map
+        (
+            clk     => clk100M,
+            reset_n => reset_n,
+            sig_in  => sdram_rw,
+            sig_out => sdram_rw_p
+        );
 
-    --leds(7 downto 1) <= spy_PC_local(7 downto 1);
-    --leds(0)          <= not serial_cts_n;
+    leds <= sdram_busy & sdram_rw_p & uart_status(5 downto 0);
 
     spy_PC <= spy_PC_local;
 
@@ -180,21 +191,20 @@ begin
     --   SDRAM RAM
     -- ================================================================
 
-    u_sdram_ctrl: entity work.sdram_ctrl(rtl)
+    u_sdram_ctrl: entity work.sdram_ctrl_cl2(rtl)
         port map
         (
             clk         => clk100M,
             reset_n     => reset_n,
-            refresh_i   => '0',
-            rw_i        => sdram_rw,
-            we_n        => sdram_we_n,
-            addr_i      => address(22 downto 1),
-            data_i      => data_out,
+            refresh_stb => '0',
+            rw_stb      => sdram_rw,
+            wen_n       => sdram_we_n,
+            addr        => address(22 downto 1),
+            data_in     => data_out,
             uds_n       => uds_n,
             lds_n       => lds_n,
-            ready_o     => open,
-            done_o      => open,
-            data_o      => sdram_data_out,
+            busy        => sdram_busy,
+            data_out    => sdram_data_out,
       
             -- SDRAM side
             sdram_cke   => O_sdram_cke,

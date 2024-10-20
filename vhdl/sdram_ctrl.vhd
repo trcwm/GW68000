@@ -138,6 +138,8 @@ architecture rtl of sdram_ctrl is
    signal sd_dqml_r, sd_dqml_x   : std_logic;
    signal ready_r, ready_x       : std_logic;
 
+   signal we_n_r                 : std_logic; -- latched we_n
+
    -- Data buffer for SDRAM to Host.
    signal buf_dout_r, buf_dout_x : std_logic_vector(15 downto 0);
 
@@ -295,8 +297,9 @@ begin
             -- 10ns since PRECHARGE.  Trp == 20ns min.
             if rw_i = '1' then
                state_x <= ST_ACTIVATE;
-               cmd_x <= CMD_ACTIVATE;
-               addr_x <= row_s;        -- Set bank select and row on activate command.
+               cmd_x   <= CMD_ACTIVATE;
+               addr_x  <= row_s;          -- Set bank select and row on activate command.
+               we_n_r  <= we_n;           -- save we_n for later
             elsif refresh_i = '1' then
                state_x <= ST_REFRESH;
                cmd_x <= CMD_REFRESH;
@@ -323,7 +326,7 @@ begin
             -- READ or WRITE command will be active in the next cycle.
             state_x <= ST_RW;
 
-            if we_n = '0' then
+            if we_n_r = '0' then
                cmd_x <= CMD_WRITE;
                sd_busdir_x <= '1';     -- The SDRAM latches the input data with the command.
                sd_dqmu_x <= uds_n;
