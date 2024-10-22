@@ -41,35 +41,28 @@ entity sdram_ctrl_cl2 is
 end sdram_ctrl_cl2;
 
 
-architecture rtl of sdram_ctrl_Cl2 is
-    type state_type is (init_power_up, 
-        init_precharge, init_precharge_nop,
-        init_refresh, init_refresh_nop, 
-        init_refresh2, init_refresh_nop2, 
-        init_set_mode, init_delay,
-        sd_read, 
-        sd_read2,
-        sd_read3,
-        sd_read4,
-        sd_read5,
-        sd_read6,
-        sd_write, 
-        sd_write2,
-        sd_write3,
-        sd_write4,
-        idle);
+architecture rtl of sdram_ctrl_cl2 is
+    type state_type is (
+        S_init,
+        S_init_wait100us,
+        S_init_precharge,
+        S_init_tRP,
+        S_init_refresh1,
+        S_init_tRFC_1,
+        S_init_refresh2,
+        S_init_tRFC_2,
+        S_init_mode,
+        S_init_tMRD,
+        S_idle,
+        S_active,
+        S_wait1,
+        S_readwrite,
+        S_cas_latency1,
+        S_cas_latency2,
+        S_precharge);
 
-    signal state      : state_type := init_power_up;
-    signal next_state : state_type;
-
-    --type cmd_type is (cmd_nop, cmd_precharge_all);
-    --signal cmd : cmd_type := cmd_nop;
-
-    signal wait_counter : unsigned(15 downto 0) := (others => '0');
-
-    signal rd_data : std_logic;
-    signal wr_data : std_logic;
-
+    signal state      : state_type := S_init;
+    --signal next_state : state_type;
     ------------------------------------------------------------------
     --   BANK  |            ROW ADDRESS            |   COL ADDRESS   |
     -- BA1 BA0 |              12 bits              |      8 bits     |
@@ -79,6 +72,7 @@ architecture rtl of sdram_ctrl_Cl2 is
     signal addr_r       : std_logic_vector(addr'range);
     signal data_in_r    : std_logic_vector(data_in'range);
     signal dqm_r        : std_logic_vector(1 downto 0);
+    signal wen_n_r      : std_logic;
 
     alias  row_addr     : std_logic_vector(11 downto 0) is addr_r(19 downto 8);
     alias  col_addr     : std_logic_vector(7 downto 0) is addr_r(7 downto 0);
@@ -93,194 +87,149 @@ architecture rtl of sdram_ctrl_Cl2 is
     constant CMD_WRITE      : std_logic_vector(2 downto 0) := "100";
     constant CMD_REFRESH    : std_logic_vector(2 downto 0) := "001";
 
-begin
+    signal waitcounter      : unsigned(15 downto 0);    
+
+    -- approximate PC133 SDRAM timings
+    -- PRECHARGE command period         tRP         20 ns
+    -- ACTIVE-to-ACTIVE command period  tRC         66 ns
+    -- ACTIVE-to_PRECHARGE command      tRAS        44 ns
+    -- AUTO REFRESH period              tRFC        66 ns
+    -- LOAD MODE to ACTIVE or REFRESH   tMRD        26 clock cylces
     
-    sdram_clk <= not clk;
-    sdram_cke <= '1';
+    constant c_wait100us : unsigned(15 downto 0) := to_unsigned(10000, 16);     -- 100us at 100MHz
+    constant c_tRP  : unsigned(15 downto 0) := to_unsigned(0, 16);
+    constant c_tRFC : unsigned(15 downto 0) := to_unsigned(1, 16);
+    constant c_tMRD : unsigned(15 downto 0) := to_unsigned(25, 16);
+
+begin
+
+    busy <= '0' when (state = S_idle) else '1';
+    
+    sdram_clk   <= clk;
+    sdram_cke   <= '1';
+    sdram_cs_n  <= '0';
+
     (sdram_ras_n, sdram_cas_n, sdram_wen_n) <= cmd;
 
     proc_clk: process(clk)
     begin
-        -- defaults
         if (rising_edge(clk)) then
+            -- defauls
+            sdram_dqm  <= "11";
+            sdram_dq   <= (others => 'Z');
+            sdram_ba   <= (others => '0');
+            sdram_addr <= (others => '0');
+
             if (reset_n = '0') then
-                state <= init_power_up;
-                sdram_dq(data_out'range) <= (others => 'Z');
-                wait_counter <= (others => '0');
-            else
-                if (state /= next_state) then
-                    wait_counter <= (others => '0');
-                else 
-                    wait_counter <= wait_counter + 1;
-                end if;
+                --sdram_cs_n  <= '1';
+                state       <= S_init;
+                cmd         <= CMD_NOP;
+                waitcounter <= (others =>'0');
+            else 
+                waitcounter <= waitcounter + 1;
 
-                if (rd_data = '1') then
-                    data_out <= sdram_dq(data_out'range);
-                elsif (wr_data = '1') then
-                    sdram_dq(data_out'range) <= data_in;
-                else
-                    sdram_dq(data_out'range) <= (others => 'Z');
-                end if;
-
-                if (rw_stb = '1') and (state = idle) then
-                    dqm_r  <= (not uds_n) & (not lds_n);
-                    addr_r <= addr;
-                end if;
-
-                state <= next_state;
-            end if;
-        end if;
+                case state is
+                    when S_init =>
+                        cmd         <= CMD_NOP;
+                        state       <= S_init_wait100us;
+                        waitcounter <= (others => '0');
+                    when S_init_wait100us =>
+                        cmd <= CMD_NOP;
+                        if (waitcounter = c_wait100us) then
+                            state <= S_init_refresh1;
+                        end if;
+                    when S_init_precharge =>
+                        cmd         <= CMD_PRECHARGE;
+                        sdram_addr(10) <= '1';  -- all banks precharge
+                        state       <= S_init_tRP;
+                        waitcounter <= (others => '0');
+                    when S_init_tRP =>
+                        cmd <= CMD_NOP;
+                        if (waitcounter <= c_tRP) then
+                            state <= S_init_refresh1;
+                        end if;
+                    when S_init_refresh1 =>
+                        cmd         <= CMD_REFRESH;
+                        state       <= S_init_tRFC_1;
+                        waitcounter <= (others => '0');
+                    when S_init_tRFC_1 =>
+                        cmd <= CMD_NOP;
+                        if (waitcounter = c_tRFC) then
+                            state <= S_init_refresh2;
+                        end if;
+                    when S_init_refresh2 =>
+                        cmd        <= CMD_REFRESH;
+                        state      <= S_init_tRFC_2;
+                        waitcounter <= (others => '0');
+                    when S_init_tRFC_2 =>
+                        cmd <= CMD_NOP;
+                        if (waitcounter = c_tRFC) then
+                            state <= S_init_mode;
+                        end if;
+                    when S_init_mode =>
+                        cmd        <= CMD_MODE;
+                        sdram_addr <= "000000100000";   -- burst length = 1, sequential, CL=2
+                        state      <= S_init_tMRD;
+                        waitcounter <= (others => '0');
+                    when S_init_tMRD =>
+                        cmd <= CMD_NOP;
+                        if (waitcounter = c_tMRD) then
+                            state <= S_idle;
+                        end if;
+                    when S_idle =>
+                        sdram_dqm  <= "11";
+                        cmd        <= CMD_NOP;
+                        if (rw_stb = '1') then                        
+                            addr_r     <= addr;
+                            data_in_r  <= data_in;
+                            wen_n_r    <= wen_n;
+                            dqm_r      <= (not uds_n) & (not lds_n);
+                            state      <= S_active;
+                        end if;
+                    when S_active =>
+                        cmd        <= CMD_ACTIVE;
+                        state      <= S_wait1;
+                        sdram_addr <= row_addr;
+                        sdram_ba   <= ba_addr;
+                    when S_wait1 =>
+                        cmd        <= CMD_NOP;
+                        state      <= S_readwrite;
+                        sdram_addr <= (others => '0');
+                        sdram_ba   <= ba_addr;
+                    when S_readwrite =>
+                        if (wen_n_r = '1') then
+                            cmd      <= CMD_READ;
+                        else
+                            cmd      <= CMD_WRITE;
+                            sdram_dq <= data_in_r;
+                        end if;
+                        state      <= S_cas_latency1;
+                        sdram_ba   <= ba_addr;
+                        sdram_addr <= "0000" & col_addr; -- no auto precharge
+                        sdram_ba   <= ba_addr;
+                        sdram_dqm  <= dqm_r;
+                    when S_cas_latency1 =>
+                        cmd        <= CMD_NOP;
+                        state      <= S_cas_latency2;
+                        sdram_dqm  <= dqm_r;
+                    when S_cas_latency2 =>
+                        cmd        <= CMD_NOP;
+                        state      <= S_precharge;
+                        sdram_dqm  <= dqm_r;                        
+                        if (wen_n_r = '1') then
+                            data_out <= sdram_dq;
+                        end if;
+                    when S_precharge =>
+                        --if (wen_n_r = '1') then
+                        --    data_out <= sdram_dq;
+                        --end if;
+                        cmd        <= CMD_PRECHARGE;
+                        state      <= S_idle;
+                        sdram_addr(10) <= '1';  -- all banks precharge
+                end case;
+            end if; -- reset
+        end if; -- rising edge
     end process proc_clk;
-
-    proc_comb: process(state, wait_counter, 
-        rw_stb, refresh_stb, 
-        wen_n,
-        data_in,
-        addr_r,
-        dqm_r)
-    begin
-        -- nop condition
-        sdram_dqm   <= "11";
-        sdram_ba    <= "00";        
-        cmd         <= CMD_NOP;
-        sdram_cs_n  <= '1';
-        rd_data     <= '0';
-        wr_data     <= '0';
-        sdram_addr  <= (others => '0');
-        busy        <= '1';
-        case state is
-            when init_power_up => -- wait for power up
-                next_state <= init_power_up;
-                if wait_counter = 20000 then    -- 200us delay at 100 MHz clock
-                    next_state <= init_precharge;
-                end if;
-            when init_precharge => -- issue pre-charge
-                sdram_cs_n     <= '0';
-                sdram_addr(10) <= '1';
-                cmd            <= CMD_PRECHARGE;
-                next_state <= init_precharge_nop;
-            when init_precharge_nop =>
-                cmd        <= CMD_NOP;
-                next_state <= init_precharge_nop;
-                if wait_counter = 200 then     -- 8us delay
-                    next_state <= init_refresh;
-                end if;
-            when init_refresh => -- issue refresh
-                cmd        <= CMD_REFRESH;
-                sdram_cs_n <= '0';
-                next_state <= init_refresh_nop; 
-            when init_refresh_nop =>
-                cmd        <= CMD_NOP;
-                next_state <= init_refresh_nop;
-                if wait_counter = 100 then    -- 8us delay
-                    next_state <= init_refresh2;
-                end if;
-            when init_refresh2 => -- issue refresh 2
-                cmd        <= CMD_REFRESH;
-                sdram_cs_n <= '0';
-                next_state <= init_refresh_nop2; 
-            when init_refresh_nop2 =>
-                cmd        <= CMD_NOP;
-                next_state <= init_refresh_nop2;
-                if wait_counter = 100 then    -- 8us delay
-                    next_state <= init_set_mode;
-                end if;
-            when init_set_mode =>
-                sdram_cs_n     <= '0';
-                cmd            <= CMD_MODE;
-                sdram_ba       <= "00";
-                sdram_addr(10) <= '0';
-                sdram_addr(2 downto 0) <= "000";    -- read burst length = 1
-                sdram_addr(3)  <= '0';              -- sequential counting
-                sdram_addr(6 downto 4) <= "010";    -- CAS latency 2
-                sdram_addr(8 downto 7) <= "00";     -- operating mode: reserved
-                sdram_addr(9) <= '1';               -- write burst length = 1
-                next_state <= init_delay;
-            when init_delay =>
-                cmd         <= CMD_NOP;
-                next_state <= init_delay;
-                if wait_counter = 3 then            -- 3 clock delay (or is it 4 .. :) ) 
-                    next_state <= idle;
-                end if;
-            when idle => -- idle
-                cmd  <= CMD_NOP;
-                busy <= '0';
-                next_state <= idle;
-                if (rw_stb = '1') then
-                    if (wen_n = '0') then
-                        data_in_r  <= data_in;
-                        next_state <= sd_write;
-                    else
-                        next_state <= sd_read;
-                    end if;
-                end if;
-            when sd_read =>
-                -- emit row address and activate bank
-                sdram_addr   <= row_addr;
-                sdram_ba     <= ba_addr;
-                CMD          <= CMD_ACTIVE;
-                sdram_cs_n   <= '0';
-                next_state   <= sd_read2;
-            when sd_read2 =>
-                cmd        <= CMD_NOP;
-                next_state <= sd_read2;
-                if wait_counter = 1 then
-                    next_state <= sd_read3;
-                end if;
-            when sd_read3 =>
-                -- emit column address and bank
-                -- with auto precharge
-                next_state   <= sd_read4;
-                sdram_addr   <= "0010" & col_addr;  -- with auto-precharge
-                sdram_ba     <= ba_addr;
-                cmd          <= CMD_READ;
-                sdram_cs_n   <= '0';
-                sdram_dqm    <= dqm_r;
-            when sd_read4 =>
-                cmd         <= CMD_NOP;
-                next_state  <= sd_read5;
-                sdram_dqm   <= dqm_r;
-                rd_data     <= '1';
-            when sd_read5 =>
-                cmd         <= CMD_NOP;
-                next_state  <= sd_read6;
-                sdram_dqm   <= dqm_r;
-            when sd_read6 =>
-                -- delay
-                next_state   <= sd_read6;
-                if wait_counter = 3 then
-                    next_state <= idle;
-                end if;
-                sdram_dqm   <= dqm_r;
-            when sd_write =>
-                -- emit row address
-                sdram_addr   <= row_addr;
-                sdram_ba     <= ba_addr;
-                CMD          <= CMD_ACTIVE;
-                sdram_cs_n   <= '0';
-                next_state <= sd_write2;
-            when sd_write2 =>
-                next_state   <= sd_write2;
-                if wait_counter = 1 then
-                    wr_data  <= '1';
-                    next_state <= sd_write3;
-                end if;
-            when sd_write3 =>
-                -- emit column address and bank
-                -- with auto precharge
-                next_state   <= sd_write4;
-                sdram_addr   <= "0010" & col_addr;
-                cmd          <= CMD_WRITE;
-                sdram_cs_n   <= '0';
-                sdram_dqm    <= dqm_r;
-            when sd_write4 =>
-                -- delay
-                next_state   <= sd_write4;
-                if wait_counter = 4 then
-                    next_state <= idle;
-                end if;
-        end case;
-    end process proc_comb;
 
 end rtl;
 

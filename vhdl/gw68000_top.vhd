@@ -28,6 +28,7 @@ entity gw68000_top is
 
         O_sdram_clk     : out std_logic;
         O_sdram_cke     : out std_logic;
+        O_sdram_cs_n    : out std_logic;
         O_sdram_cas_n   : out std_logic;
         O_sdram_ras_n   : out std_logic;
         O_sdram_wen_n   : out std_logic;
@@ -64,7 +65,7 @@ architecture rtl of gw68000_top is
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
 
-    O_sdram_clk <= clk100M;
+    O_sdram_clk     <= not clk100M;
 
     -- address decoding:
 
@@ -208,7 +209,7 @@ begin
       
             -- SDRAM side
             sdram_cke   => O_sdram_cke,
-            sdram_cs_n  => open,
+            sdram_cs_n  => O_sdram_cs_n,
             sdram_ras_n => O_sdram_ras_n,
             sdram_cas_n => O_sdram_cas_n,
             sdram_wen_n => O_sdram_wen_n,

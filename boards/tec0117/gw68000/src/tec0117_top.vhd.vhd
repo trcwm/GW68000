@@ -21,6 +21,7 @@ entity tec0117_top is
 
         -- sdram IO
         O_sdram_clk     : out std_logic;
+        O_sdram_cs_n    : out std_logic;
         O_sdram_cke     : out std_logic;
         O_sdram_cas_n   : out std_logic;
         O_sdram_ras_n   : out std_logic;
@@ -64,6 +65,7 @@ begin
 
             O_sdram_clk     => O_sdram_clk,
             O_sdram_cke     => O_sdram_cke,
+            O_sdram_cs_n    => O_sdram_cs_n,
             O_sdram_cas_n   => O_sdram_cas_n,
             O_sdram_ras_n   => O_sdram_ras_n,
             O_sdram_wen_n   => O_sdram_wen_n,
