@@ -7,6 +7,7 @@ Running placement......
 [10%] Placement Phase 0 completed
 [20%] Placement Phase 1 completed
 [30%] Placement Phase 2 completed
+WARN  (TA1132) :  'ip_clk' was determined to be a clock but was not created.
 [50%] Placement Phase 3 completed
 Running routing......
 [60%] Routing Phase 0 completed
@@ -25,5 +26,5 @@ Generate file "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/pnr
 Generate file "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/pnr/sdramcapture.rpt.html" completed
 Generate file "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/pnr/sdramcapture.rpt.txt" completed
 Generate file "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/pnr/sdramcapture.tr.html" completed
-Wed Oct 23 00:37:55 2024
+Wed Oct 23 15:56:26 2024
 

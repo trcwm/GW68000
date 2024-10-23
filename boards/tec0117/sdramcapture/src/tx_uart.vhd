@@ -38,7 +38,7 @@ begin
 
     serial_out <= txbuffer(0);  -- tx LSB first
 
-    ready <= '1' when state = S_idle else '0';
+    --ready <= '1' when state = S_idle else '0';
 
     proc_clk: process(clk)
     begin
@@ -72,14 +72,17 @@ begin
 
     proc_state: process(state, we_n, baud_stb, bitcount)
     begin
+        ready       <= '0';
         shift       <= '0';
         load        <= '0';
         next_state  <= state;
 
         case state is
             when S_idle =>
+                ready <= '1';
                 if (we_n = '0') then
-                    load <= '1';
+                    ready <= '0';
+                    load  <= '1';
                     next_state <= S_tx;
                 end if;
             when S_load =>

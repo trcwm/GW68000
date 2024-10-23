@@ -5,9 +5,9 @@
     <Device id="GW1NR-9" package="QFN88" speed="6" partNumber="GW1NR-LV9QN88C6/I5"/>
     <FileList>
         <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd" type="vhdl"/>
-        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd" type="vhdl"/>
-        <File path="/storage/programming/gw68000/vhdl/baudgen.vhd" type="vhdl"/>
-        <File path="/storage/programming/gw68000/vhdl/tx_uart.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd" type="vhdl"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>

@@ -10,24 +10,35 @@ Analyzing architecture 'beh'("/storage/programming/gw68000/boards/tec0117/sdramc
 Analyzing entity '\~top.SDRAM_controller\'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2905)
 Analyzing architecture 'beh'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2905)
 Analyzing entity 'sdram_controller'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2912)
-Analyzing architecture 'beh'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2942)
-Analyzing VHDL file '/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd'
-Analyzing entity 'tec0117_top'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":11)
-Analyzing architecture 'rtl'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":36)
-WARN  (EX4557) : Actual for formal port 'i_sdram_clk' is neither a static name nor a globally static expression("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":80)
-Analyzing VHDL file '/storage/programming/gw68000/vhdl/baudgen.vhd'
-Analyzing entity 'baudgen'("/storage/programming/gw68000/vhdl/baudgen.vhd":8)
-Analyzing architecture 'rtl'("/storage/programming/gw68000/vhdl/baudgen.vhd":22)
-Analyzing VHDL file '/storage/programming/gw68000/vhdl/tx_uart.vhd'
-Analyzing entity 'tx_uart'("/storage/programming/gw68000/vhdl/tx_uart.vhd":9)
-Analyzing architecture 'rtl'("/storage/programming/gw68000/vhdl/tx_uart.vhd":22)
-Processing 'tec0117_top(rtl)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":11)
+Analyzing architecture 'beh'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2944)
+Analyzing VHDL file '/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd'
+Analyzing entity 'baudgen'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd":8)
+Analyzing architecture 'rtl'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd":22)
+Analyzing VHDL file '/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd'
+Analyzing entity 'tx_uart'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd":9)
+Analyzing architecture 'rtl'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd":22)
+Analyzing VHDL file '/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd'
+Analyzing entity 'tec0117_top'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":12)
+Analyzing architecture 'rtl'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":37)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_dqm', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":80)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_cs_n', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":82)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_ras_n', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":83)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_cas_n', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":84)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_wen_n', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":85)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_addr', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":87)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_ba', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":88)
+WARN  (EX4967) : Cannot read from 'out' object 'o_sdram_addr', use 'buffer' or 'inout' instead("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":88)
+WARN  (EX4557) : Actual for formal port 'i_sdram_clk' is neither a static name nor a globally static expression("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":133)
+Processing 'tec0117_top(rtl)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":12)
+Processing 'baudgen(g_baudrate=115200)(rtl)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd":8)
+WARN  (EX4206) : Using initial value for 'baudmax' since it is never assigned("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd":31)
+Processing 'tx_uart(rtl)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd":9)
 Processing 'SDRAM_controller(beh)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2912)
 Processing '**(**)'("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd":2905)
 NOTE  (EX0101) : Current top module is "tec0117_top"
 [5%] Running netlist conversion ...
-WARN  (CV0016) : Input serial_in is unused("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":19)
-WARN  (CV0016) : Input serial_cts_n is unused("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd":20)
+WARN  (CV0016) : Input serial_in is unused("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":20)
+WARN  (CV0016) : Input serial_cts_n is unused("/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd":21)
 Running device independent optimization ...
 [10%] Optimizing Phase 0 completed
 [15%] Optimizing Phase 1 completed
