@@ -1,0 +1,1 @@
+Example of how to use the Gowin embedded SDRAM controller.
