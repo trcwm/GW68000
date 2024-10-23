@@ -82,22 +82,7 @@ begin
         end if;
     end process proc_clk;
 
-    u_sdram: entity work.sdram(behavioral)
-        port map
-        (
-            clk         => clk,
-            cke         => '1',
-            cs_n        => sdram_cs_n,
-            ras_n       => sdram_ras_n,
-            cas_n       => sdram_cas_n,
-            we_n        => sdram_wen_n,
-            addr        => sdram_addr,
-            ba          => sdram_ba,
-            dq          => sdram_dq,
-            dqm         => sdram_dqm
-        );
-
-    u_dut: entity work.sdram_ctrl_cl2(rtl)
+    u_dut: entity work.sdram_ctrl(rtl)
         port map
         (
             clk         => clk,
@@ -117,8 +102,8 @@ begin
             data_in     => sdram_data_in,
             data_out    => sdram_data_out,
             addr        => addr,
-            wen_n       => we_n,
-            rw_stb      => rw,
+            wr_n        => we_n,
+            io_stb      => rw,
             refresh_stb => '0',
             busy        => busy
         );

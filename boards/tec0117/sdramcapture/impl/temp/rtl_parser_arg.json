@@ -8,17 +8,17 @@
   },
   {
    "Library" : "work",
+   "Path" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd",
+   "Type" : "vhdl"
+  },
+  {
+   "Library" : "work",
    "Path" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd",
    "Type" : "vhdl"
   },
   {
    "Library" : "work",
    "Path" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tx_uart.vhd",
-   "Type" : "vhdl"
-  },
-  {
-   "Library" : "work",
-   "Path" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/baudgen.vhd",
    "Type" : "vhdl"
   }
  ],

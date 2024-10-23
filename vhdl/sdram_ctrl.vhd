@@ -1,397 +1,263 @@
--- Released under the 3-Clause BSD License:
---
--- Copyright 2010-2019 Matthew Hagerty (matthew <at> dnotq <dot> io)
--- Copyright 2024      Niels Moseley (n.a.moseley <at> moseleyinstruments <dot> com)
---
--- Redistribution and use in source and binary forms, with or without
--- modification, are permitted provided that the following conditions are met:
---
--- 1. Redistributions of source code must retain the above copyright notice,
--- this list of conditions and the following disclaimer.
---
--- 2. Redistributions in binary form must reproduce the above copyright
--- notice, this list of conditions and the following disclaimer in the
--- documentation and/or other materials provided with the distribution.
---
--- 3. Neither the name of the copyright holder nor the names of its
--- contributors may be used to endorse or promote products derived from this
--- software without specific prior written permission.
---
--- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
--- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
--- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
--- ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
--- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
--- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
--- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
--- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
--- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
--- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
--- POSSIBILITY OF SUCH DAMAGE.
+-- SDRAM controller for Gowin GW1NR-9
+-- Copyright Moseley Instruments (c) 2024
 
--- Simple SDRAM Controller for Winbond W9812G6JH-75
---
--- Matthew Hagerty
---
--- Change Log:
---
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
--- Okt 19, 2024
---    Changed to 64MBit SDRAM
---    Updates signal names to reflect active high or low
---
--- Dec 14, 2019
---    Changed SDRAM input data setup to ST_RAS1 so it will be correctly
---    registered during ST_RAS2.
---    Comment cleanup.
---
--- Jan 28, 2016
---    Changed to use positive clock edge.
---    Buffered output (read) data, sampled during RAS2.
---    Removed unused signals for features that were not implemented.
---    Changed tabs to space.
---
--- March 19, 2014
---    Initial implementation.
-
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-use IEEE.math_real.all;
+--library gw1n;
+--use gw1n.components.all;
 
 entity sdram_ctrl is
-   port(
-      -- Host side
-      clk            : in std_logic;            -- Master clock, 100 MHz
-      reset_n        : in std_logic := '0';     -- Reset, active high
-      refresh_i      : in std_logic := '0';     -- Initiate a refresh cycle, active high
-      rw_i           : in std_logic := '0';     -- Initiate a read or write operation, active high
-      we_n           : in std_logic := '0';     -- Write enable, active low
-      addr_i         : in std_logic_vector(21 downto 0);   -- Address from host to SDRAM
-      data_i         : in std_logic_vector(15 downto 0);   -- Data from host to SDRAM
-      uds_n          : in std_logic;            -- Data upper byte enable, active low
-      lds_n          : in std_logic;            -- Data lower byte enable, active low
-      ready_o        : out std_logic := '0';    -- Set to '1' when the memory is ready
-      done_o         : out std_logic := '0';    -- Read, write, or refresh, operation is done
-      data_o         : out std_logic_vector(15 downto 0);   -- Data from SDRAM to host
+    port(
+        clk             : in std_logic;
+        reset_n         : in std_logic;
+        clk_sdram_out   : out std_logic;
 
-      -- SDRAM side
-      sdram_cke      : out std_logic;           -- Clock-enable to SDRAM
-      sdram_cs_n     : out std_logic;           -- Chip-select to SDRAM
-      sdram_ras_n    : out std_logic;           -- SDRAM row address strobe
-      sdram_cas_n    : out std_logic;           -- SDRAM column address strobe
-      sdram_wen_n    : out std_logic;           -- SDRAM write enable
-      sdram_ba       : out std_logic_vector( 1 downto 0);   -- SDRAM bank address
-      sdram_addr     : out std_logic_vector(11 downto 0);   -- SDRAM row/column address
-      sdram_dq       : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
-      sdram_dqm      : out std_logic_vector(1 downto 0)     -- Enable upper-byte of SDRAM databus if true
-   );
-end entity;
+        sdram_wen_n : out std_logic;
+        sdram_cas_n : out std_logic;
+        sdram_ras_n : out std_logic;
+        sdram_cs_n  : out std_logic;
+        sdram_ba    : out std_logic_vector(1 downto 0);
+        sdram_dqm   : out std_logic_vector(1 downto 0);
+        sdram_dq    : inout std_logic_vector(15 downto 0);
+        sdram_addr  : out std_logic_vector(11 downto 0);
+
+        lds_n       : in std_logic;
+        uds_n       : in std_logic;
+        data_in     : in std_logic_vector(15 downto 0);
+        data_out    : out std_logic_vector(15 downto 0);
+        addr        : in std_logic_vector(21 downto 0);
+        wr_n        : in std_logic;
+        io_stb      : in std_logic;
+        refresh_stb : in std_logic;
+        busy        : out std_logic;
+        dtack_n     : out std_logic
+    );
+end sdram_ctrl;
 
 architecture rtl of sdram_ctrl is
+    signal drive_dq_n     : std_logic := '1';
+    signal data_from_ram  : std_logic_vector(data_out'RANGE);
+    signal data_to_ram    : std_logic_vector(data_out'RANGE);
 
+    -- gowin specific IOBUF
+    component IOBUF
+        port 
+        (
+            O   : out std_logic;
+            IO  : inout std_logic;
+            I   : in std_logic;
+            OEN : in std_logic
+        );
+    end component;
 
-   -- SDRAM controller states.
-   type fsm_state_type is (
-   ST_INIT_WAIT, ST_INIT_PRECHARGE, ST_INIT_REFRESH1, ST_INIT_MODE, ST_INIT_REFRESH2,
-   ST_IDLE, ST_REFRESH, ST_ACTIVATE, ST_RCD, ST_RW, ST_RAS1, ST_RAS2, ST_PRECHARGE);
-   signal state_r, state_x : fsm_state_type := ST_INIT_WAIT;
+    signal counter   : unsigned(3 downto 0);
+    signal data_in_r : std_logic_vector(data_in'RANGE);
+    signal dqm_r     : std_logic_vector(1 downto 0);
+    alias  ba_addr   : std_logic_vector(1 downto 0)  is addr(21 downto 20);
+    alias  row_addr  : std_logic_vector(11 downto 0) is addr(19 downto 8);
+    alias  col_addr  : std_logic_vector(7 downto 0)  is addr(7 downto 0);
 
+    type state_t is (S_init, 
+        S_init_precharge, 
+        S_init_precharge_wait, 
+        S_init_refresh_wait,
+        S_init_refresh2_wait,
+        S_init_mode_wait,
+        S_idle,
+        S_read,
+        S_read2,
+        S_read3,
+        S_read4,
+        S_read5,
+        S_write,
+        S_write2,
+        S_write3,
+        S_write4,
+        S_write5
+        );
 
-   -- SDRAM mode register data sent on the address bus.
-   --
-   -- | A11-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
-   -- | reserved| wr burst |reserved| CAS Ltncy|addr mode| burst len|
-   --      0  0      0       0   0    0  1  0       0      0  0  0
-   constant MODE_REG : std_logic_vector(11 downto 0) := "00" & "0" & "00" & "010" & "0" & "000";
+    signal state : state_t;
 
-   -- SDRAM commands combine SDRAM inputs: cs, ras, cas, we.
-   subtype cmd_type is unsigned(3 downto 0);
-   constant CMD_ACTIVATE         : cmd_type := "0011";
-   constant CMD_PRECHARGE        : cmd_type := "0010";
-   constant CMD_WRITE            : cmd_type := "0100";
-   constant CMD_READ             : cmd_type := "0101";
-   constant CMD_MODE             : cmd_type := "0000";
-   constant CMD_NOP              : cmd_type := "0111";
-   constant CMD_REFRESH          : cmd_type := "0001";
-
-   signal cmd_r                  : cmd_type;
-   signal cmd_x                  : cmd_type;
-
-   signal bank_s                 : std_logic_vector( 1 downto 0);
-   signal row_s                  : std_logic_vector(11 downto 0);
-   signal col_s                  : std_logic_vector( 7 downto 0);
-   signal addr_r                 : std_logic_vector(11 downto 0);
-   signal addr_x                 : std_logic_vector(11 downto 0);    -- SDRAM row/column address.
-   signal sd_dout_r              : std_logic_vector(15 downto 0);
-   signal sd_dout_x              : std_logic_vector(15 downto 0);
-   signal sd_busdir_r            : std_logic;
-   signal sd_busdir_x            : std_logic;
-
-   signal timer_r, timer_x       : natural range 0 to 20000 := 0;
-   signal refcnt_r, refcnt_x     : natural range 0 to 8 := 0;
-
-   signal bank_r, bank_x         : std_logic_vector(1 downto 0);
-   signal cke_r, cke_x           : std_logic;
-   signal sd_dqmu_r, sd_dqmu_x   : std_logic;
-   signal sd_dqml_r, sd_dqml_x   : std_logic;
-   signal ready_r, ready_x       : std_logic;
-
-   signal we_n_r                 : std_logic; -- latched we_n
-
-   -- Data buffer for SDRAM to Host.
-   signal buf_dout_r, buf_dout_x : std_logic_vector(15 downto 0);
-
+    signal cmd   : std_logic_vector(2 downto 0);    
+    constant CMD_MODE     : std_logic_vector(2 downto 0) := "000";
+    constant CMD_REFRESH  : std_logic_vector(2 downto 0) := "001";
+    constant CMD_PRECHARGE: std_logic_vector(2 downto 0) := "010";
+    constant CMD_ACTIVE   : std_logic_vector(2 downto 0) := "011";
+    constant CMD_WRITE    : std_logic_vector(2 downto 0) := "100";
+    constant CMD_READ     : std_logic_vector(2 downto 0) := "101";    
+    constant CMD_NOP      : std_logic_vector(2 downto 0) := "111";
 begin
 
-   -- All signals to SDRAM buffered.
+    clk_sdram_out <= not clk;
+    sdram_cs_n    <= '0';
 
-   (sdram_cs_n, sdram_ras_n, sdram_cas_n, sdram_wen_n) <= cmd_r;   -- SDRAM operation control bits
-   sdram_cke     <= cke_r;      -- SDRAM clock enable
-   sdram_ba      <= bank_r;     -- SDRAM bank address
-   sdram_addr    <= addr_r;     -- SDRAM address
-   sdram_dq      <= sd_dout_r when sd_busdir_r = '1' else (others => 'Z');   -- SDRAM data bus.
-   sdram_dqm(1)  <= sd_dqmu_r;  -- SDRAM high data byte enable, active low
-   sdram_dqm(0)  <= sd_dqml_r;  -- SDRAM low date byte enable, active low
+    (sdram_ras_n, sdram_cas_n, sdram_wen_n) <= cmd;
 
-   -- Signals back to host.
-   ready_o <= ready_r;
-   data_o  <= buf_dout_r;
+    -- part specific IO buffers to enable
+    -- a bi-directional bus
+    g_GENERATE_FOR: for i in 0 to 15 generate
+        u_entity: IOBUF
+            port map
+            (
+                O   => data_from_ram(i),
+                I   => data_to_ram(i),
+                IO  => sdram_dq(i),
+                OEN => drive_dq_n
+            );
+    end generate g_GENERATE_FOR;
+    
+    proc_clk: process(clk)
+    begin
+        if (rising_edge(clk)) then
+            -- defaults
+            drive_dq_n  <= '1'; -- dq as input as default
+            sdram_ba    <= "11";
+            sdram_dqm   <= "00";
+            sdram_addr  <= x"FFF";
 
-   -- 21  20  | 19 18 17 16 15 14 13 12 11 10 09 08 | 07 06 05 04 03 02 01 00 |
-   -- BS0 BS1 |        ROW (A11-A0)  4096 rows      |   COL (A7-A0)  256 cols |
+            busy        <= '1';
+            cmd         <= CMD_NOP;
+            dtack_n     <= '1';
 
-   bank_s <= addr_i(21 downto 20);
-   row_s <= addr_i(19 downto 8);
-   col_s <= addr_i(7 downto 0);
-
-   process (
-        state_r, timer_r, refcnt_r, cke_r, addr_r, sd_dout_r, sd_busdir_r, sd_dqmu_r, sd_dqml_r, ready_r,
-        bank_s, row_s, col_s,
-        rw_i, refresh_i, addr_i, data_i, we_n, uds_n, lds_n,
-        buf_dout_r, sdram_dq)
-   begin
-
-      state_x     <= state_r;       -- Stay in the same state unless changed.
-      timer_x     <= timer_r;       -- Hold the cycle timer by default.
-      refcnt_x    <= refcnt_r;      -- Hold the refresh timer by default.
-      cke_x       <= cke_r;         -- Stay in the same clock mode unless changed.
-      cmd_x       <= CMD_NOP;       -- Default to NOP unless changed.
-      bank_x      <= bank_r;        -- Register the SDRAM bank.
-      addr_x      <= addr_r;        -- Register the SDRAM address.
-      sd_dout_x   <= sd_dout_r;     -- Register the SDRAM write data.
-      sd_busdir_x <= sd_busdir_r;   -- Register the SDRAM bus tristate control.
-      sd_dqmu_x   <= sd_dqmu_r;
-      sd_dqml_x   <= sd_dqml_r;
-      buf_dout_x  <= buf_dout_r;    -- SDRAM to host data buffer.
-
-      ready_x     <= ready_r;       -- Always ready unless performing initialization.
-      done_o      <= '0';           -- Done tick, single cycle.
-
-      if timer_r /= 0 then
-         timer_x <= timer_r - 1;
-      else
-
-         cke_x       <= '1';
-         bank_x      <= bank_s;
-         -- A10 low for rd/wr commands to suppress auto-precharge.
-         addr_x      <= "0000" & col_s;
-         sd_dqmu_x   <= '0';
-         sd_dqml_x   <= '0';
-
-         case state_r is
-
-         when ST_INIT_WAIT =>
-
-            -- 1. Wait 200us with DQM signals high, cmd NOP.
-            -- 2. Precharge all banks.
-            -- 3. Eight refresh cycles.
-            -- 4. Set mode register.
-            -- 5. Eight refresh cycles.
-
-            state_x <= ST_INIT_PRECHARGE;
-            timer_x <= 20000;          -- Wait 200us (20,000 cycles).
---          timer_x <= 2;              -- for simulation
-            sd_dqmu_x <= '1';
-            sd_dqml_x <= '1';
-
-         when ST_INIT_PRECHARGE =>
-
-            state_x <= ST_INIT_REFRESH1;
-            refcnt_x <= 8;             -- Do 8 refresh cycles in the next state.
---          refcnt_x <= 2;             -- for simulation
-            cmd_x <= CMD_PRECHARGE;
-            timer_x <= 2;              -- Wait 2 cycles plus state overhead for 20ns Trp.
-            bank_x <= "00";
-            addr_x(10) <= '1';         -- Precharge all banks.
-
-         when ST_INIT_REFRESH1 =>
-
-            if refcnt_r = 0 then
-               state_x <= ST_INIT_MODE;
+            if (reset_n = '0') then
+                data_in_r <= (others => '0');
+                counter   <= (others => '0');
+                dqm_r     <= (others => '0');
+                state     <= S_init;
             else
-               refcnt_x <= refcnt_r - 1;
-               cmd_x <= CMD_REFRESH;
-               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
+                counter <= counter + 1;
+
+                case (state) is
+
+                    -- --------------------------------
+                    -- INIT SEQUENCE
+                    -- --------------------------------
+
+                    when S_init =>
+                        if (counter = 1) then   -- two cycles nop
+                            state   <= S_init_precharge;
+                            counter <= (others => '0');
+                        end if;
+                    when S_init_precharge =>
+                        cmd     <= CMD_PRECHARGE;
+                        state   <= S_init_precharge_wait;
+                        counter <= (others => '0');
+                    when S_init_precharge_wait =>
+                        if (counter = 2) then   -- two cycles nop
+                            cmd     <= CMD_REFRESH;
+                            state   <= S_init_refresh_wait;
+                            counter <= (others => '0');
+                        end if;
+                    when S_init_refresh_wait =>
+                        if (counter = 5) then   -- 5 cycles nop
+                            cmd     <= CMD_REFRESH;
+                            state   <= S_init_refresh2_wait;
+                            counter <= (others => '0');
+                        end if;
+                    when S_init_refresh2_wait =>
+                        if (counter = 5) then   -- 5 cycles nop
+                            cmd        <= CMD_MODE;
+                            sdram_addr <= x"030";  -- burstlen = 0, CAS latency = 3
+                            state      <= S_init_mode_wait;
+                            sdram_ba   <= "00";
+                            counter    <= (others => '0');
+                        end if;
+                    when S_init_mode_wait =>
+                        if (counter = 8) then   -- 8 cycles nop
+                            state   <= S_idle;
+                            counter <= (others => '0');
+                        end if;
+
+                    -- --------------------------------
+                    -- IDLE
+                    -- --------------------------------
+
+                    when S_idle =>
+                        busy <= '0';
+                        if (io_stb = '1') then
+                            data_in_r <= data_in;           -- latch data in
+                            dqm_r     <= uds_n & lds_n;     -- and byte selects
+                            busy      <= '1';
+                            state     <= S_read when (wr_n ='1') else S_write;
+                            counter   <= (others => '0');
+                        end if;
+
+                    -- --------------------------------
+                    -- READ SEQUENCE
+                    -- --------------------------------
+                    when S_read =>
+                        sdram_addr <= row_addr;
+                        sdram_ba   <= ba_addr;
+                        sdram_dqm  <= dqm_r;
+                        cmd        <= CMD_ACTIVE;
+                        state      <= S_read2;
+                    when S_read2 =>
+                        -- single nop
+                        sdram_dqm  <= dqm_r;
+                        state      <= S_read3;
+                    when S_read3 =>
+                        sdram_addr <= "0000" & col_addr;
+                        sdram_ba   <= ba_addr;
+                        sdram_dqm  <= dqm_r;
+                        cmd        <= CMD_READ;
+                        state      <= S_read4;
+                        counter    <= (others => '0');
+                    when S_read4 =>
+                        sdram_dqm  <= dqm_r;
+                        cmd        <= CMD_PRECHARGE;    -- all banks
+                        state      <= S_read5;
+                        counter    <= (others => '0');
+                    when S_read5 =>
+                        sdram_dqm  <= dqm_r;
+                        if (counter = 4) then
+                            data_out <= data_from_ram;
+                            state    <= S_idle;
+                            dtack_n  <= '0';
+                        end if;
+                    -- --------------------------------
+                    -- WRITE SEQUENCE
+                    -- --------------------------------
+                    when S_write =>                        
+                        sdram_addr <= row_addr;
+                        sdram_ba   <= ba_addr;
+                        sdram_dqm  <= dqm_r;
+                        cmd        <= CMD_ACTIVE;
+                        state      <= S_write2;
+                    when S_write2 =>
+                        -- single nop
+                        sdram_dqm  <= dqm_r;
+                        state      <= S_write3;
+                    when S_write3 =>
+                        sdram_addr <= "0000" & col_addr;
+                        sdram_ba   <= ba_addr;
+                        sdram_dqm  <= dqm_r;
+                        data_to_ram <= data_in;
+                        cmd        <= CMD_WRITE;                        
+                        state      <= S_write4;
+                        drive_dq_n <= '0';
+                        counter    <= (others => '0');
+                    when S_write4 =>
+                        -- 2 nops
+                        drive_dq_n <= '0';
+                        sdram_dqm  <= dqm_r;
+                        if (counter = 2) then
+                            cmd     <= CMD_PRECHARGE;    -- all banks
+                            state   <= S_write5;
+                            counter <= (others => '0');
+                        end if;
+                    when S_write5 =>
+                        -- 3 nops
+                        sdram_dqm  <= dqm_r;
+                        drive_dq_n <= '0';
+                        if (counter = 3) then
+                            state   <= S_idle;
+                            dtack_n <= '0';
+                        end if;
+                end case;
             end if;
-
-         when ST_INIT_MODE =>
-
-            state_x <= ST_INIT_REFRESH2;
-            refcnt_x <= 8;             -- Do 8 refresh cycles in the next state.
---          refcnt_x <= 2;             -- for simulation
-            bank_x <= "00";
-            addr_x <= MODE_REG;
-            cmd_x <= CMD_MODE;
-            timer_x <= 2;              -- Trsc == 2 cycles after issuing MODE command.
-
-         when ST_INIT_REFRESH2 =>
-
-            if refcnt_r = 0 then
-               state_x <= ST_IDLE;
-               ready_x <= '1';
-            else
-               refcnt_x <= refcnt_r - 1;
-               cmd_x <= CMD_REFRESH;
-               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
-            end if;
-
-      --
-      -- Normal Operation
-      --
-         -- Trc  - 70ns - Activate to activate command.
-         -- Trcd - 20ns - Activate to read/write command.
-         -- Tras - 50ns - Activate to precharge command.
-         -- Trp  - 20ns - Precharge to activate command.
-         -- TCas - 2clk - Read/write to data out.
-         --
-         --         |<-----------       Trc      ------------>|
-         --         |<----------- Tras ---------->|
-         --         |<- Trcd  ->|<- TCas  ->|     |<-  Trp  ->|
-         --  T0__  T1__  T2__  T3__  T4__  T5__  T6__  T0__  T1__
-         -- __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-         -- IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
-         --     --<Row>-------------------------------------<Row>--
-         --                ---<Col>---
-         --                ---<A10>-------------<A10>---
-         --                                  ---<Bank>---
-         --                ---<DQM>---
-         --                ---<Din>---
-         --                                  ---<Dout>---
-         --   ---<Refsh>-----------------------------------<Refsh>---
-         --
-         -- A10 during rd/wr : 0 = disable auto-precharge, 1 = enable auto-precharge.
-         -- A10 during precharge: 0 = single bank, 1 = all banks.
-
-         -- Next State vs Current State Guide
-         --
-         --  T0__  T1__  T2__  T3__  T4__  T5__  T6__  T0__  T1__  T2__
-         -- __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-         -- IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
-         --       IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
-
-
-         when ST_IDLE =>
-            -- 60ns since activate when coming from PRECHARGE state.
-            -- 10ns since PRECHARGE.  Trp == 20ns min.
-            if rw_i = '1' then
-               state_x <= ST_ACTIVATE;
-               cmd_x   <= CMD_ACTIVATE;
-               addr_x  <= row_s;          -- Set bank select and row on activate command.
-               we_n_r  <= we_n;           -- save we_n for later
-            elsif refresh_i = '1' then
-               state_x <= ST_REFRESH;
-               cmd_x <= CMD_REFRESH;
-               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
-            end if;
-
-         when ST_REFRESH =>
-
-            state_x <= ST_IDLE;
-            done_o <= '1';
-
-         when ST_ACTIVATE =>
-            -- Trc (Active to Active Command Period) is 65ns min.
-            -- 70ns since activate when coming from PRECHARGE -> IDLE states.
-            -- 20ns since PRECHARGE.
-            -- ACTIVATE command is presented to the SDRAM.  The command out of this
-            -- state will be NOP for one cycle.
-            state_x <= ST_RCD;
-            sd_dout_x <= data_i;       -- Register any write data, even if not used.
-
-         when ST_RCD =>
-            -- 10ns since activate.
-            -- Trcd == 20ns min.  The clock is 10ns, so the requirement is satisfied by this state.
-            -- READ or WRITE command will be active in the next cycle.
-            state_x <= ST_RW;
-
-            if we_n_r = '0' then
-               cmd_x <= CMD_WRITE;
-               sd_busdir_x <= '1';     -- The SDRAM latches the input data with the command.
-               sd_dqmu_x <= uds_n;
-               sd_dqml_x <= lds_n;
-            else
-               cmd_x <= CMD_READ;
-            end if;
-
-         when ST_RW =>
-            -- 20ns since activate.
-            -- READ or WRITE command presented to SDRAM.
-            state_x <= ST_RAS1;
-            sd_busdir_x <= '0';
-
-         when ST_RAS1 =>
-            -- 30ns since activate.
-            -- Data from the SDRAM will be registered on the next clock.
-            state_x <= ST_RAS2;
-            buf_dout_x <= sdram_dq;
-
-         when ST_RAS2 =>
-            -- 40ns since activate.
-            -- Tras (Active to precharge Command Period) 45ns min.
-            -- PRECHARGE command will be active in the next cycle.
-            state_x <= ST_PRECHARGE;
-            cmd_x <= CMD_PRECHARGE;
-            addr_x(10) <= '1';         -- Precharge all banks.
-
-         when ST_PRECHARGE =>
-            -- 50ns since activate.
-            -- PRECHARGE presented to SDRAM.
-            state_x <= ST_IDLE;
-            done_o <= '1';             -- Read data is ready and should be latched by the host.
-            timer_x <= 1;              -- Buffer to make sure host takes down memory request before going IDLE.
-
-         end case;
-      end if;
-   end process;
-
-   process (clk)
-   begin
-      if rising_edge(clk) then
-        if reset_n = '0' then
-            state_r  <= ST_INIT_WAIT;
-            timer_r  <= 0;
-            cmd_r    <= CMD_NOP;
-            cke_r    <= '0';
-            ready_r  <= '0';
-        else
-            state_r     <= state_x;
-            timer_r     <= timer_x;
-            refcnt_r    <= refcnt_x;
-            cke_r       <= cke_x;         -- CKE to SDRAM.
-            cmd_r       <= cmd_x;         -- Command to SDRAM.
-            bank_r      <= bank_x;        -- Bank to SDRAM.
-            addr_r      <= addr_x;        -- Address to SDRAM.
-            sd_dout_r   <= sd_dout_x;     -- Data to SDRAM.
-            sd_busdir_r <= sd_busdir_x;   -- SDRAM bus direction.
-            sd_dqmu_r   <= sd_dqmu_x;     -- Upper byte enable to SDRAM.
-            sd_dqml_r   <= sd_dqml_x;     -- Lower byte enable to SDRAM.
-            ready_r     <= ready_x;
-            buf_dout_r  <= buf_dout_x;
-
         end if;
-      end if;
-   end process;
+    end process proc_clk;
 
-end architecture;
+end architecture rtl;

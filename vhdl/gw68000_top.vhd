@@ -49,8 +49,8 @@ architecture rtl of gw68000_top is
 
     signal ram_data_out     : std_logic_vector(15 downto 0);
     signal sdram_data_out   : std_logic_vector(15 downto 0);
-    signal sdram_we_n       : std_logic;
-    signal sdram_rw         : std_logic;
+    signal sdram_wr_n       : std_logic;
+    signal sdram_io_stb     : std_logic;
     signal sdram_busy       : std_logic;
     signal uart_status      : std_logic_vector(7 downto 0);
     
@@ -61,11 +61,11 @@ architecture rtl of gw68000_top is
     signal rx_uart_full, tx_uart_empty : std_logic;
     signal rx_uart_read_stb : std_logic;
 
-    signal sdram_rw_p   : std_logic;
+    signal sdram_cs     : std_logic;
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
 
-    O_sdram_clk     <= not clk100M;
+    O_sdram_cke <= '1';
 
     -- address decoding:
 
@@ -78,15 +78,15 @@ begin
     lower_we_n <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
 
     -- SDRAM decoding
-    sdram_rw   <= '1' when (address(31 downto 24) = x"10" and as_n = '0') else '0';
-    sdram_we_n <= we_n when (sdram_rw = '1') else '1';
+    sdram_cs   <= '1' when (address(31 downto 24) = x"10" and as_n = '0') else '0';
+    sdram_wr_n <= we_n when (sdram_cs = '1') else '1';
 
     -- 68000 data_in generation
     proc_addr_decoder: process(
         address, 
         as_n, 
         we_n, 
-        uart_status, 
+        uart_status,
         uart_rxdata, 
         ram_data_out,
         sdram_data_out)
@@ -116,18 +116,7 @@ begin
 
     end process proc_addr_decoder;
 
-    -- make the sdram_rw signal persistent
-    -- so we can easily display it on an LED
-    u_persistent: entity work.persistence(rtl)
-        port map
-        (
-            clk     => clk100M,
-            reset_n => reset_n,
-            sig_in  => sdram_rw,
-            sig_out => sdram_rw_p
-        );
-
-    leds <= sdram_busy & sdram_rw_p & uart_status(5 downto 0);
+    leds <= sdram_busy & uart_status(6 downto 0);
 
     spy_PC <= spy_PC_local;
 
@@ -192,14 +181,16 @@ begin
     --   SDRAM RAM
     -- ================================================================
 
-    u_sdram_ctrl: entity work.sdram_ctrl_cl2(rtl)
+    u_sdram_ctrl: entity work.sdram_ctrl(rtl)
         port map
         (
-            clk         => clk100M,
-            reset_n     => reset_n,
+            clk           => clk100M,
+            reset_n       => reset_n,
+            
+
             refresh_stb => '0',
-            rw_stb      => sdram_rw,
-            wen_n       => sdram_we_n,
+            io_stb      => sdram_io_stb,
+            wr_n        => sdram_wr_n,
             addr        => address(22 downto 1),
             data_in     => data_out,
             uds_n       => uds_n,
@@ -208,15 +199,16 @@ begin
             data_out    => sdram_data_out,
       
             -- SDRAM side
-            sdram_cke   => O_sdram_cke,
-            sdram_cs_n  => O_sdram_cs_n,
-            sdram_ras_n => O_sdram_ras_n,
-            sdram_cas_n => O_sdram_cas_n,
-            sdram_wen_n => O_sdram_wen_n,
-            sdram_ba    => O_sdram_ba,
-            sdram_addr  => O_sdram_addr,
-            sdram_dq    => IO_sdram_dq,
-            sdram_dqm   => O_sdram_dqm
+            clk_sdram_out => O_sdram_clk,
+            --sdram_cke     => O_sdram_cke,
+            sdram_cs_n    => O_sdram_cs_n,
+            sdram_ras_n   => O_sdram_ras_n,
+            sdram_cas_n   => O_sdram_cas_n,
+            sdram_wen_n   => O_sdram_wen_n,
+            sdram_ba      => O_sdram_ba,
+            sdram_addr    => O_sdram_addr,
+            sdram_dq      => IO_sdram_dq,
+            sdram_dqm     => O_sdram_dqm
         );
 
     -- ================================================================
