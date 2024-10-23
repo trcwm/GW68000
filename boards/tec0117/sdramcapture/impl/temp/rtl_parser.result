@@ -1,0 +1,46 @@
+[
+ {
+  "InstFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd",
+  "InstLine" : 11,
+  "InstName" : "tec0117_top",
+  "ModuleFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd",
+  "ModuleLine" : 11,
+  "ModuleName" : "tec0117_top",
+  "SubInsts" : [
+   {
+    "InstFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd",
+    "InstLine" : 65,
+    "InstName" : "u_sdram",
+    "ModuleFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd",
+    "ModuleLine" : 2912,
+    "ModuleName" : "SDRAM_controller",
+    "SubInsts" : [
+     {
+      "InstFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd",
+      "InstLine" : 3087,
+      "InstName" : "sdrc_top_inst",
+      "ModuleFile" : "/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd",
+      "ModuleLine" : 14,
+      "ModuleName" : "\\~top.SDRAM_controller\\"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "InstFile" : "/storage/programming/gw68000/vhdl/baudgen.vhd",
+  "InstLine" : 8,
+  "InstName" : "baudgen",
+  "ModuleFile" : "/storage/programming/gw68000/vhdl/baudgen.vhd",
+  "ModuleLine" : 8,
+  "ModuleName" : "baudgen"
+ },
+ {
+  "InstFile" : "/storage/programming/gw68000/vhdl/tx_uart.vhd",
+  "InstLine" : 9,
+  "InstName" : "tx_uart",
+  "ModuleFile" : "/storage/programming/gw68000/vhdl/tx_uart.vhd",
+  "ModuleLine" : 9,
+  "ModuleName" : "tx_uart"
+ }
+]

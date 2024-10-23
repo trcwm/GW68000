@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gowin-synthesis-project>
+<Project>
+    <Version>beta</Version>
+    <Device id="GW1NR-9" package="QFN88" speed="6" partNumber="GW1NR-LV9QN88C6/I5"/>
+    <FileList>
+        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/tec0117_top.vhd.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/vhdl/baudgen.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/vhdl/tx_uart.vhd" type="vhdl"/>
+        <File path="/storage/programming/gw68000/boards/tec0117/sdramcapture/src/SDRAM_controller/SDRAM_controller.vhd" type="vhdl"/>
+    </FileList>
+    <OptionList>
+        <Option type="disable_insert_pad" value="0"/>
+        <Option type="global_freq" value="50.000"/>
+        <Option type="looplimit" value="2000"/>
+        <Option type="output_file" value="/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/gwsynthesis/gw68000.vg"/>
+        <Option type="print_all_synthesis_warning" value="0"/>
+        <Option type="ram_rw_check" value="1"/>
+        <Option type="vcc" value="1.2"/>
+        <Option type="vccx" value="3.3"/>
+        <Option type="verilog_language" value="verilog-2001"/>
+        <Option type="vhdl_language" value="vhdl-1993"/>
+    </OptionList>
+</Project>

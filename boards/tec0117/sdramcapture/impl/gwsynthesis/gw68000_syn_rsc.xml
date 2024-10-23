@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="SDRAM_controller" Register="321" Alu="51" Lut="413" Bsram="1" Ssram="4" T_Register="321(321)" T_Alu="51(51)" T_Lut="413(413)" T_Bsram="1(1)" T_Ssram="4(4)"/>

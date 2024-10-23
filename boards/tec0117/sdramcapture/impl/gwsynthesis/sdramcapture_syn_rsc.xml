@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="tec0117_top" Register="55" Alu="27" Lut="32" T_Register="359(55)" T_Alu="78(27)" T_Lut="444(32)" T_Bsram="1(0)" T_Ssram="4(0)">
+ <SubModule name="u_sdram" Register="304" Alu="51" Lut="412" Bsram="1" Ssram="4" T_Register="304(304)" T_Alu="51(51)" T_Lut="412(412)" T_Bsram="1(1)" T_Ssram="4(4)"/>
+</Module>

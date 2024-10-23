@@ -44,18 +44,7 @@ architecture rtl of tec0117_top is
 
     signal reset_n : std_logic;
 
---    signal O_sdram_clk     : std_logic;
---    signal O_sdram_cs_n    : std_logic;
---    signal O_sdram_cke     : std_logic;
---    signal O_sdram_cas_n   : std_logic;
---    signal O_sdram_ras_n   : std_logic;
---    signal O_sdram_wen_n   : std_logic;
---    signal O_sdram_dqm     : std_logic_vector(1 downto 0);
---    signal O_sdram_ba      : std_logic_vector(1 downto 0);
---    signal IO_sdram_dq     : std_logic_vector(15 downto 0);
---    signal O_sdram_addr    : std_logic_vector(11 downto 0);
---    
-    signal counter : unsigned(22 downto 0); -- event counter
+    signal counter : unsigned(20 downto 0); -- event counter
     signal rw_stb  : std_logic;
 
     signal counter2: unsigned(7 downto 0);  -- memory data counter
@@ -124,9 +113,8 @@ begin
     begin
         if rising_edge(clk12M) then
 
-            --leds(7) <= '0';
-
             if (reset_n = '0') then
+                counter2 <= (others => '0');
                 state <= S_wait_for_init;
             else
                 case state is
