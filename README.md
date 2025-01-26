@@ -14,3 +14,7 @@ A Retrochallenge 2024/10 project.
 * external storage support.
 * timer with interrupt.
 * get Fuzix running.
+
+## Building
+* execute 'bootstrap.sh' to generate the blockram VHDL files.
+* use Quartus II 13 to build for the Terasic DE0 board.
