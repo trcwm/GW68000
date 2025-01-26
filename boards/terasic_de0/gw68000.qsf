@@ -47,7 +47,6 @@ set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
 set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
-set_global_assignment -name VHDL_FILE vhdl/gw68000_top.vhdl
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
@@ -64,6 +63,10 @@ set_location_assignment PIN_C1 -to leds[6]
 set_location_assignment PIN_C2 -to leds[7]
 set_location_assignment PIN_B2 -to leds[8]
 set_location_assignment PIN_B1 -to leds[9]
+
+set_location_assignment PIN_U22 -to uart_rxd
+set_location_assignment PIN_U21 -to uart_txd
+
 set_location_assignment PIN_G21 -to clk50MHz
 set_location_assignment PIN_J6 -to reset_n
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to reset_n
@@ -77,10 +80,21 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[8]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rxd
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_txd
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk50MHz
 
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name GENERATE_SVF_FILE ON
 
+set_global_assignment -name VHDL_FILE ../../contrib/TG68_fast.vhd
+set_global_assignment -name VHDL_FILE ../../contrib/TG68.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/gw68000_top.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/tx_uart.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rx_uart.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/clkgen.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/blockram.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/baudgen.vhd
+set_global_assignment -name VHDL_FILE vhdl/gw68000_top.vhdl
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
