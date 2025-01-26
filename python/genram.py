@@ -16,14 +16,14 @@ entity ###NAME### is
     (
         data_width  : integer := ###DWIDTH###;
         addr_width  : integer := ###AWIDTH###
-    )
+    );
     port
     (   
         clk         : in std_logic;
         we_n        : in std_logic;
         data_in     : in std_logic_vector(data_width-1 downto 0);
         data_out_r  : out std_logic_vector(data_width-1 downto 0);
-        address     : in std_logic(addr_width-1 downto 0)
+        address     : in std_logic_vector(addr_width-1 downto 0)
     );
 end ###NAME###;
 
@@ -32,16 +32,17 @@ architecture behavioral of ###NAME### is
     type ram_t is array(0 to num_entries-1) of std_logic_vector(data_in'range);
 
     function init_ram return ram_t is
-        variable result : ram_t
+        variable result : ram_t;
     begin
 ###CONTENTS###
         return result;
     end init_ram;
 
-    signal RAM : ram_r : init_ram;
+    signal RAM : ram_t := init_ram;
 begin
 
     proc_clk: process(clk)
+        variable ram_index : integer;
     begin
         if rising_edge(clk) then
             ram_index := to_integer(unsigned(address));
@@ -59,7 +60,7 @@ end behavioral;
 """
 
 
-parser = argparse.ArgumentParser(description="Just an example",
+parser = argparse.ArgumentParser(description="Generate a VHDL RAM with inline contents",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("name", help="RAM entity name")

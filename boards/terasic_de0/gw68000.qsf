@@ -88,13 +88,14 @@ set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name GENERATE_SVF_FILE ON
 
+set_global_assignment -name VHDL_FILE ../../vhdl/bramupper.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/bramlower.vhd
 set_global_assignment -name VHDL_FILE ../../contrib/TG68_fast.vhd
 set_global_assignment -name VHDL_FILE ../../contrib/TG68.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/gw68000_top.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/tx_uart.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/rx_uart.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/clkgen.vhd
-set_global_assignment -name VHDL_FILE ../../vhdl/blockram.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/baudgen.vhd
 set_global_assignment -name VHDL_FILE vhdl/gw68000_top.vhdl
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

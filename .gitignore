@@ -2,3 +2,5 @@
 *.cf
 *.ghw
 asmx
+vhdl/bramupper.vhd
+vhdl/bramlower.vhd
