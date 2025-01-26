@@ -24,9 +24,9 @@ with open(config["src"], "rb") as infile:
     idx = 0
     for byte in data:
         if idx % 2 == 0:
-            f_lower.write(byte.to_bytes())
-        else:
             f_upper.write(byte.to_bytes())
+        else:
+            f_lower.write(byte.to_bytes())
         idx=idx+1
 
 print(f"Processed {idx} bytes")

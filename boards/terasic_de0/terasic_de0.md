@@ -67,6 +67,43 @@
 * R22 MSDAT
 * P21 KBDAT
 
+# 7 Segment digits
+E11 Seven Segment Digit 0[0]
+F11 Seven Segment Digit 0[1]
+H12 Seven Segment Digit 0[2]
+H13 Seven Segment Digit 0[3]
+G12 Seven Segment Digit 0[4]
+F12 Seven Segment Digit 0[5]
+F13 Seven Segment Digit 0[6]
+D13 Seven Segment Decimal Point 0
+
+A13 Seven Segment Digit 1[0]
+B13 Seven Segment Digit 1[1]
+C13 Seven Segment Digit 1[2]
+A14 Seven Segment Digit 1[3]
+B14 Seven Segment Digit 1[4]
+E14 Seven Segment Digit 1[5]
+A15 Seven Segment Digit 1[6]
+B15 Seven Segment Decimal Point 1
+
+D15 Seven Segment Digit 2[0]
+A16 Seven Segment Digit 2[1]
+B16 Seven Segment Digit 2[2]
+E15 Seven Segment Digit 2[3]
+A17 Seven Segment Digit 2[4]
+B17 Seven Segment Digit 2[5]
+F14 Seven Segment Digit 2[6]
+A18 Seven Segment Decimal Point 2
+
+B18 Seven Segment Digit 3[0]
+F15 Seven Segment Digit 3[1]
+A19 Seven Segment Digit 3[2]
+B19 Seven Segment Digit 3[3]
+C19 Seven Segment Digit 3[4]
+D19 Seven Segment Digit 3[5]
+G15 Seven Segment Digit 3[6]
+G16 Seven Segment Decimal Point 3
+
 # SDCARD
 * Y21 SDCLK
 * Y22 SD CMD bidir

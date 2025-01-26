@@ -12,7 +12,6 @@ use work.TG68_fast;
 entity gw68000_top is
     port
     (
-        clk100M         : in std_logic;
         clk12M5         : in std_logic;
         reset_n         : in std_logic;
         leds            : out std_logic_vector(7 downto 0);

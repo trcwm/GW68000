@@ -53,6 +53,43 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+
+set_location_assignment PIN_E11 -to digit0[0]
+set_location_assignment PIN_F11 -to digit0[1]
+set_location_assignment PIN_H12 -to digit0[2]
+set_location_assignment PIN_H13 -to digit0[3]
+set_location_assignment PIN_G12 -to digit0[4]
+set_location_assignment PIN_F12 -to digit0[5]
+set_location_assignment PIN_F13 -to digit0[6]
+set_location_assignment PIN_D13 -to digit0[7]
+
+set_location_assignment PIN_A13 -to digit1[0]
+set_location_assignment PIN_B13 -to digit1[1]
+set_location_assignment PIN_C13 -to digit1[2]
+set_location_assignment PIN_A14 -to digit1[3]
+set_location_assignment PIN_B14 -to digit1[4]
+set_location_assignment PIN_E14 -to digit1[5]
+set_location_assignment PIN_A15 -to digit1[6]
+set_location_assignment PIN_B15 -to digit1[7]
+
+set_location_assignment PIN_D15 -to digit2[0]
+set_location_assignment PIN_A16 -to digit2[1]
+set_location_assignment PIN_B16 -to digit2[2]
+set_location_assignment PIN_E15 -to digit2[3]
+set_location_assignment PIN_A17 -to digit2[4]
+set_location_assignment PIN_B17 -to digit2[5]
+set_location_assignment PIN_F14 -to digit2[6]
+set_location_assignment PIN_A18 -to digit2[7]
+
+set_location_assignment PIN_B18 -to digit3[0]
+set_location_assignment PIN_F15 -to digit3[1]
+set_location_assignment PIN_A19 -to digit3[2]
+set_location_assignment PIN_B19 -to digit3[3]
+set_location_assignment PIN_C19 -to digit3[4]
+set_location_assignment PIN_D19 -to digit3[5]
+set_location_assignment PIN_G15 -to digit3[6]
+set_location_assignment PIN_G16 -to digit3[7]
+
 set_location_assignment PIN_J1 -to leds[0]
 set_location_assignment PIN_J2 -to leds[1]
 set_location_assignment PIN_J3 -to leds[2]
@@ -68,7 +105,7 @@ set_location_assignment PIN_U22 -to uart_rxd
 set_location_assignment PIN_U21 -to uart_txd
 
 set_location_assignment PIN_G21 -to clk50MHz
-set_location_assignment PIN_J6 -to reset_n
+set_location_assignment PIN_F1 -to reset_n
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to reset_n
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[1]
@@ -88,6 +125,7 @@ set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name GENERATE_SVF_FILE ON
 
+set_global_assignment -name VHDL_FILE vhdl/seg7.vhdl
 set_global_assignment -name VHDL_FILE ../../vhdl/bramupper.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/bramlower.vhd
 set_global_assignment -name VHDL_FILE ../../contrib/TG68_fast.vhd
@@ -98,4 +136,5 @@ set_global_assignment -name VHDL_FILE ../../vhdl/rx_uart.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/clkgen.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/baudgen.vhd
 set_global_assignment -name VHDL_FILE vhdl/gw68000_top.vhdl
+set_global_assignment -name SDC_FILE gw68000.sdc
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
