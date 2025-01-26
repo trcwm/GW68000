@@ -153,7 +153,7 @@ begin
         generic map
         (
             g_clkrate   => 12500000,
-            g_baudrate  => 115200            
+            g_baudrate  => 115200
         )
         port map
         (

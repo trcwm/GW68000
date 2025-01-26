@@ -45,17 +45,17 @@ begin
     u_gw68000: entity gw68000_top(rtl)
         port map
         (
-            clk12M5         => clkdiv(19),
+            clk12M5         => clkdiv(19),  -- 4 Hz clock
             reset_n         => reset_n,
-            leds            => open,
+            leds            => leds(7 downto 0),
             serial_out      => uart_txd,
             serial_in       => uart_rxd,
             serial_cts_n    => '0',
             spy_PC          => spy_PC
         );
 
-    leds(8 downto 0) <= spy_PC(8 downto 0);
-    leds(9) <= '1';
+    leds(8) <= '0';
+    leds(9) <= '0';
 
     u_digit0: entity seg7(rtl)
         port map
