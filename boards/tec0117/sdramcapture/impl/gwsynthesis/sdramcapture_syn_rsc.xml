@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Module name="tec0117_top" Register="43" Alu="7" Lut="81" T_Register="361(43)" T_Alu="69(7)" T_Lut="523(81)" T_Bsram="1(0)" T_Ssram="4(0)">
- <SubModule name="u_baudgen" Register="13" Alu="11" Lut="6" T_Register="13(13)" T_Alu="11(11)" T_Lut="6(6)"/>
- <SubModule name="u_txuart" Register="16" Lut="23" T_Register="16(16)" T_Lut="23(23)"/>
- <SubModule name="u_sdram" Register="289" Alu="51" Lut="413" Bsram="1" Ssram="4" T_Register="289(289)" T_Alu="51(51)" T_Lut="413(413)" T_Bsram="1(1)" T_Ssram="4(4)"/>
-</Module>

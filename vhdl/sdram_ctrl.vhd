@@ -211,7 +211,7 @@ begin
                         counter    <= (others => '0');
                     when S_read5 =>
                         sdram_dqm  <= dqm_r;
-                        if (counter = 4) then
+                        if (counter = 2) then           -- depends on CAS latency
                             data_out <= data_from_ram;
                             state    <= S_idle;
                             dtack_n  <= '0';

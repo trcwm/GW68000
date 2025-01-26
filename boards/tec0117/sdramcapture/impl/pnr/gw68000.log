@@ -1,4 +1,0 @@
-Reading netlist file: "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/gwsynthesis/gw68000.vg"
-Parsing netlist file "/storage/programming/gw68000/boards/tec0117/sdramcapture/impl/gwsynthesis/gw68000.vg" completed
-ERROR  (PA2024) : The number(75) of ports exceeds the resource limit 58 regular I/Os and 1 RECONFIG_N I/Os of current device, you can also use 4 JTAG, 3 SSPI, 4 MSPI and 1 DONE I/Os by configuring Dual-Purpose Pin as regular I/Os.
-NOTE  (PA0005) : Processing netlist completed with errors
