@@ -10,6 +10,30 @@
 * G21 / CLK$ connected to 50 MHz
 * B12 / CLK9 connected to 50 MHz
 
+# LEDS
+* J1 LED0
+* J2 LED1
+* J3 LED2
+* H1 LED3
+* F2 LED4
+* E1 LED5
+* C1 LED6
+* C2 LED7
+* B2 LED8
+* B1 LED9
+
+# Switched
+* J6 SW0
+* H5 SW1
+* H6 SW2
+* G4 SW3
+* G5 SW4
+* J7 SW5
+* H7 SW6
+* E3 SW7
+* E4 SW8
+* D2 SW9
+
 # LCD 
 * F21 -> LCD BACKLIGHT ON
 * D22 -> DATA0
