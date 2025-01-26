@@ -1,2 +1,2 @@
 #!/bin/sh
-openfpgaloader -b DE0 ./output_files/gw68000.svf
+openFPGALoader -c usb-blaster -b de0 ./output_files/gw68000.svf
