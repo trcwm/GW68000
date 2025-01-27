@@ -2,6 +2,12 @@
 -- Version          Description
 --   0.1:           initial version
 
+-- DRAM interface:
+-- chip is Zentel A3V64S40ETP-G6 4Mx16
+-- four banks, 166 MHz, 
+-- WE_n, CAS_n, RAS_n, CS_n, CKE have external pullups
+-- 
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -20,7 +26,18 @@ entity terasic_de0_top is
         digit2      : out std_logic_vector(7 downto 0);
         digit3      : out std_logic_vector(7 downto 0);
         uart_rxd    : in std_logic;
-        uart_txd    : out std_logic
+        uart_txd    : out std_logic;
+
+        dram_addr       : out std_logic_vector(12 downto 0);
+        dram_dq         : inout std_logic_vector(15 downto 0);
+        dram_ba         : out std_logic_vector(1 downto 0);
+        dram_dqm        : out std_logic_vector(1 downto 0);
+        dram_we_n       : out std_logic;
+        dram_clk        : out std_logic;
+        dram_cke        : out std_logic;
+        dram_cs_n       : out std_logic;
+        dram_cas_n      : out std_logic;
+        dram_ras_n      : out std_logic
     );
 end entity;
 
@@ -29,6 +46,8 @@ architecture rtl of terasic_de0_top is
     signal clkdiv  : unsigned(19 downto 0) := (others => '0');
     signal spy_PC  : std_logic_vector(31 downto 0);
 begin
+
+    dram_addr(12) <= '0';   -- A12 does not exist on the SDRAM
 
     proc_clk: process(clk50MHz)
     begin
@@ -52,7 +71,18 @@ begin
             serial_out      => uart_txd,
             serial_in       => uart_rxd,
             serial_cts_n    => '0',
-            spy_PC          => spy_PC
+            spy_PC          => spy_PC,
+
+            dram_addr       => dram_addr(11 downto 0),
+            dram_dq         => dram_dq,
+            dram_ba         => dram_ba,
+            dram_dqm        => dram_dqm,
+            dram_we_n       => dram_we_n,
+            dram_clk        => dram_clk,
+            dram_cke        => dram_cke,
+            dram_cs_n       => dram_cs_n,
+            dram_cas_n      => dram_cas_n,
+            dram_ras_n      => dram_ras_n
         );
 
     leds(8) <= '0';

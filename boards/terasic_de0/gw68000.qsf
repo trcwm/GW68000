@@ -131,10 +131,10 @@ set_location_assignment PIN_D21 -to uart_txd
 # SDRAM
 ######################################################################
 
-set_location_assignment PIN_B5 -to dram_ba_0
-set_location_assignment PIN_A4 -to dram_ba_1
-set_location_assignment PIN_E7 -to dram_ldqm
-set_location_assignment PIN_B8 -to dram_udqm
+set_location_assignment PIN_B5 -to dram_ba[0]
+set_location_assignment PIN_A4 -to dram_ba[1]
+set_location_assignment PIN_E7 -to dram_dqm[0]
+set_location_assignment PIN_B8 -to dram_dqm[1]
 set_location_assignment PIN_D6 -to dram_we_n
 set_location_assignment PIN_G8 -to dram_cas_n
 set_location_assignment PIN_F7 -to dram_ras_n
@@ -154,19 +154,19 @@ set_location_assignment PIN_C7 -to dram_addr[8]
 set_location_assignment PIN_B7 -to dram_addr[9]
 set_location_assignment PIN_B4 -to dram_addr[10]
 set_location_assignment PIN_A7 -to dram_addr[11]
-set_location_assignment PIN_C8 -to dram_addr[13]
+set_location_assignment PIN_C8 -to dram_addr[12]
 
 set_location_assignment PIN_D10 -to dram_dq[0]
 set_location_assignment PIN_G10 -to dram_dq[1]
 set_location_assignment PIN_H10 -to dram_dq[2]
-set_location_assignment PIN_E9  -to dram_dq[3]
-set_location_assignment PIN_F9  -to dram_dq[4]
-set_location_assignment PIN_G9  -to dram_dq[5]
-set_location_assignment PIN_H9  -to dram_dq[6]
-set_location_assignment PIN_F8  -to dram_dq[7]
-set_location_assignment PIN_A8  -to dram_dq[8]
-set_location_assignment PIN_B9  -to dram_dq[9]
-set_location_assignment PIN_A9  -to dram_dq[10]
+set_location_assignment PIN_E9 -to dram_dq[3]
+set_location_assignment PIN_F9 -to dram_dq[4]
+set_location_assignment PIN_G9 -to dram_dq[5]
+set_location_assignment PIN_H9 -to dram_dq[6]
+set_location_assignment PIN_F8 -to dram_dq[7]
+set_location_assignment PIN_A8 -to dram_dq[8]
+set_location_assignment PIN_B9 -to dram_dq[9]
+set_location_assignment PIN_A9 -to dram_dq[10]
 set_location_assignment PIN_C10 -to dram_dq[11]
 set_location_assignment PIN_B10 -to dram_dq[12]
 set_location_assignment PIN_A10 -to dram_dq[13]
@@ -245,6 +245,7 @@ set_global_assignment -name VHDL_FILE ../../vhdl/tx_uart.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/rx_uart.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/clkgen.vhd
 set_global_assignment -name VHDL_FILE ../../vhdl/baudgen.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/sdram_ctrl.vhd
 set_global_assignment -name VHDL_FILE vhdl/gw68000_top.vhdl
 set_global_assignment -name SDC_FILE gw68000.sdc
 

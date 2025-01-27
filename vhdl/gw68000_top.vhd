@@ -18,7 +18,18 @@ entity gw68000_top is
         serial_out      : out std_logic;
         serial_in       : in std_logic;
         serial_cts_n    : in std_logic;
-        spy_PC          : out std_logic_vector(31 downto 0)
+        spy_PC          : out std_logic_vector(31 downto 0);
+
+        dram_addr       : out std_logic_vector(11 downto 0);
+        dram_dq         : inout std_logic_vector(15 downto 0);
+        dram_ba         : out std_logic_vector(1 downto 0);
+        dram_dqm        : out std_logic_vector(1 downto 0);
+        dram_we_n       : out std_logic;
+        dram_clk        : out std_logic;
+        dram_cke        : out std_logic;
+        dram_cs_n       : out std_logic;
+        dram_cas_n      : out std_logic;
+        dram_ras_n      : out std_logic
     );
 end;
 
@@ -31,14 +42,18 @@ architecture rtl of gw68000_top is
     signal data_in  : std_logic_vector(15 downto 0);
 
     signal ram_data_out     : std_logic_vector(15 downto 0);
+    signal dram_data_out    : std_logic_vector(15 downto 0);
     signal uart_status      : std_logic_vector(7 downto 0);
     
     signal uart_rxdata  : std_logic_vector(7 downto 0);
 
     signal upper_we_n, lower_we_n, tx_uart_we_n : std_logic;
+    
     signal rx_baud_stb, tx_baud_stb : std_logic;
     signal rx_uart_full, tx_uart_empty : std_logic;
     signal rx_uart_read_stb : std_logic;
+
+    signal dram_io_stb : std_logic;
 
     signal spy_PC_local : std_logic_vector(31 downto 0);
 begin 
@@ -49,8 +64,9 @@ begin
     tx_uart_we_n <= as_n when (address(31 downto 24) = x"01" and we_n = '0') else '1';
 
     -- RAM decoding
-    upper_we_n <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
-    lower_we_n <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
+    upper_we_n  <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and uds_n = '0') else '1';
+    lower_we_n  <= as_n when (address(31 downto 24) = x"00" and we_n = '0' and lds_n = '0') else '1';
+    dram_io_stb <= (not as_n) when (address(31 downto 24) = x"10") else '0';
 
     -- 68000 data_in generation
     proc_addr_decoder: process(
@@ -80,7 +96,7 @@ begin
                     end if;
                 when others =>
                     -- SDRAM
-                    data_in <= (others => '0');
+                    data_in <= dram_data_out;
             end case;
         end if;
 
@@ -143,6 +159,38 @@ begin
             lds         => lds_n,
             uds         => uds_n,
             spy_PC      => spy_PC_local
+        );
+
+    -- ================================================================
+    --   sdram
+    -- ================================================================
+
+    u_sdram_ctrl: entity work.sdram_ctrl(rtl)
+        port map
+        (
+            clk             => clk12M5,
+            reset_n         => reset_n,
+            clk_sdram_out   => dram_clk,
+    
+            sdram_wen_n     => dram_we_n,
+            sdram_cas_n     => dram_cas_n,
+            sdram_ras_n     => dram_ras_n,
+            sdram_cs_n      => dram_cs_n,
+            sdram_ba        => dram_ba,
+            sdram_dqm       => dram_dqm,
+            sdram_dq        => dram_dq,
+            sdram_addr      => dram_addr,
+
+            lds_n           => lds_n,
+            uds_n           => uds_n,
+            data_in         => data_out,
+            data_out        => dram_data_out,
+            addr            => address(22 downto 1),
+            wr_n            => we_n,
+            io_stb          => dram_io_stb,
+            refresh_stb     => '0',
+            busy            => open,
+            dtack_n         => open
         );
 
     -- ================================================================

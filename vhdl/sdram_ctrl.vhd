@@ -1,12 +1,9 @@
 -- SDRAM controller for Gowin GW1NR-9
--- Copyright Moseley Instruments (c) 2024
+-- Copyright Moseley Instruments (c) 2024, 2025
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
---library gw1n;
---use gw1n.components.all;
 
 entity sdram_ctrl is
     port(
@@ -97,17 +94,29 @@ begin
 
     -- part specific IO buffers to enable
     -- a bi-directional bus
-    g_GENERATE_FOR: for i in 0 to 15 generate
-        u_entity: IOBUF
-            port map
-            (
-                O   => data_from_ram(i),
-                I   => data_to_ram(i),
-                IO  => sdram_dq(i),
-                OEN => drive_dq_n
-            );
-    end generate g_GENERATE_FOR;
+    --g_GENERATE_FOR: for i in 0 to 15 generate
+        --u_entity: IOBUF
+        --    port map
+        --    (
+        --        O   => data_from_ram(i),
+        --        I   => data_to_ram(i),
+        --        IO  => sdram_dq(i),
+        --        OEN => drive_dq_n
+        --    );
+
+    --end generate g_GENERATE_FOR;
     
+    proc_iobuffer: process(data_to_ram, drive_dq_n, sdram_dq)
+    begin
+        if (drive_dq_n = '1') then
+            sdram_dq <= (others => 'Z');    -- tristate 
+            data_from_ram <= sdram_dq;
+        else
+            sdram_dq <= data_to_ram;
+            data_from_ram <= (others => '0');            
+        end if;
+    end process proc_iobuffer;
+
     proc_clk: process(clk)
     begin
         if (rising_edge(clk)) then
@@ -180,7 +189,11 @@ begin
                             data_in_r <= data_in;           -- latch data in
                             dqm_r     <= uds_n & lds_n;     -- and byte selects
                             busy      <= '1';
-                            state     <= S_read when (wr_n ='1') else S_write;
+                            if (wr_n = '1') then
+                                state <= S_read;
+                            else
+                                state <= S_write;
+                            end if;
                             counter   <= (others => '0');
                         end if;
 
