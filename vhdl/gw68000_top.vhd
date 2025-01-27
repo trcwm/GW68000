@@ -73,10 +73,10 @@ begin
                 when x"01" =>
                     -- IO space
                     if (address(2) = '0') then
-                        data_in <= x"00" & uart_status;
+                        data_in <= uart_status & x"00";
                     else
                         rx_uart_read_stb <= '1';
-                        data_in <= x"00" & uart_rxdata;
+                        data_in <= uart_rxdata & x"00";
                     end if;
                 when others =>
                     -- SDRAM
@@ -168,7 +168,7 @@ begin
             clk         => clk12M5,
             reset_n     => reset_n,
             we_n        => tx_uart_we_n,
-            data_in     => data_out(7 downto 0),
+            data_in     => data_out(15 downto 8),
             baud_stb    => tx_baud_stb,
             serial_out  => serial_out,
             ready       => tx_uart_empty

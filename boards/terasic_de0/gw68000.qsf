@@ -101,8 +101,19 @@ set_location_assignment PIN_C2 -to leds[7]
 set_location_assignment PIN_B2 -to leds[8]
 set_location_assignment PIN_B1 -to leds[9]
 
-set_location_assignment PIN_U22 -to uart_rxd
-set_location_assignment PIN_U21 -to uart_txd
+# we are not using the official UART of the DE0
+# but a TTL to USB converter 
+# D0 DTS, pin D22
+# D1 RX, pin D21
+# D2 TX, pin C22
+# D4 CTS, pin B22
+
+set_location_assignment PIN_C22 -to uart_rxd
+set_location_assignment PIN_D21 -to uart_txd
+
+# These are the official DE0 UART pins:
+#set_location_assignment PIN_U22 -to uart_rxd
+#set_location_assignment PIN_U21 -to uart_txd
 
 set_location_assignment PIN_G21 -to clk50MHz
 set_location_assignment PIN_F1 -to reset_n
@@ -117,8 +128,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[8]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to leds[9]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rxd
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_txd
+
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rxd
+
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk50MHz
 
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF

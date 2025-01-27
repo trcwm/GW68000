@@ -24,7 +24,7 @@
 # Clock constraints
 
 create_clock -name "clk50MHz" -period 20.000ns [get_ports {clk50MHz}]
-
+create_generated_clock -source clk50MHz [get_ports {clk12M5}]
 
 # Automatically constrain PLL and other generated clocks
 derive_pll_clocks -create_base_clocks

@@ -24,9 +24,8 @@ entity terasic_de0_top is
     );
 end entity;
 
-
-
 architecture rtl of terasic_de0_top is
+    signal clk12M5 : std_logic;
     signal clkdiv  : unsigned(19 downto 0) := (others => '0');
     signal spy_PC  : std_logic_vector(31 downto 0);
 begin
@@ -42,10 +41,12 @@ begin
         end if;
     end process proc_clk;
 
+    clk12M5 <= clkdiv(1);
+
     u_gw68000: entity gw68000_top(rtl)
         port map
         (
-            clk12M5         => clkdiv(19),  -- 4 Hz clock
+            clk12M5         => clk12M5,
             reset_n         => reset_n,
             leds            => leds(7 downto 0),
             serial_out      => uart_txd,
