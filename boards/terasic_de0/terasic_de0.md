@@ -22,7 +22,7 @@
 * B2 LED8
 * B1 LED9
 
-# Switched
+# Switches
 * J6 SW0
 * H5 SW1
 * H6 SW2
