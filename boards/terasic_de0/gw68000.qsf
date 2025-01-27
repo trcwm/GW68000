@@ -135,12 +135,12 @@ set_location_assignment PIN_B5 -to dram_ba_0
 set_location_assignment PIN_A4 -to dram_ba_1
 set_location_assignment PIN_E7 -to dram_ldqm
 set_location_assignment PIN_B8 -to dram_udqm
-set_location_assignemnt PIN_D6 -to dram_we_n
-set_location_assignemnt PIN_G8 -to dram_cas_n
-set_location_assignemnt PIN_F7 -to dram_ras_n
-set_location_assignemnt PIN_G7 -to dram_cs_n
-set_location_assignemnt PIN_E5 -to dram_clk
-set_location_assignemnt PIN_E6 -to dram_cke
+set_location_assignment PIN_D6 -to dram_we_n
+set_location_assignment PIN_G8 -to dram_cas_n
+set_location_assignment PIN_F7 -to dram_ras_n
+set_location_assignment PIN_G7 -to dram_cs_n
+set_location_assignment PIN_E5 -to dram_clk
+set_location_assignment PIN_E6 -to dram_cke
 
 set_location_assignment PIN_C4 -to dram_addr[0]
 set_location_assignment PIN_A3 -to dram_addr[1]
